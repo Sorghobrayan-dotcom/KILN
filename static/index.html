@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiln — assets with a memory</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<header>
+  <h1>Kiln</h1>
+  <p class="tagline">Genblaze gives you provenance per run.<br>
+     Kiln gives you a curated library across runs.</p>
+</header>
+
+<section class="panel">
+  <form id="brief-form">
+    <div class="row">
+      <label>Project <input id="project" value="providence" required></label>
+      <label>How many <input id="count" type="number" min="1" max="12" value="3"></label>
+      <label>Token <input id="token" type="password" value="kiln-demo-2026"></label>
+    </div>
+    <label>Brief
+      <textarea id="description" rows="2" required>NPC portrait, monochrome engraving, high contrast woodcut</textarea>
+    </label>
+    <button id="go">Generate</button>
+  </form>
+  <p id="status" class="status"></p>
+</section>
+
+<section class="panel">
+  <div class="row spread">
+    <h2>Staging</h2>
+    <span>
+      <button id="refresh" class="ghost">Refresh</button>
+      <button id="publish">Seal a version</button>
+    </span>
+  </div>
+  <div id="grid"></div>
+  <p id="empty" class="muted">Nothing staged yet. Send a brief above.</p>
+</section>
+
+<dialog id="prov">
+  <h2>Provenance</h2>
+  <dl id="prov-body"></dl>
+  <button onclick="document.getElementById('prov').close()">Close</button>
+</dialog>
+
+<script src="/app.js"></script>
+</body>
+</html>
