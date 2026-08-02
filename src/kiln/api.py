@@ -30,6 +30,8 @@ class _State:
     token: str = "dev"
     savings: Callable[[], dict] | None = None
     roster: Callable[[], list[dict]] | None = None
+    #: what the last brief was informed by — shown so the influence is never silent
+    taste: Callable[[], str] | None = None
     #: turns a Genblaze manifest URL back into a bucket key, so the provenance
     #: view can read the manifest the sink wrote
     manifest_key_from_url: Callable[[str], str | None] | None = None
@@ -102,6 +104,7 @@ def create_brief(brief: BriefIn, x_kiln_token: str | None = Header(default=None)
         "served_from_cache": served,
         "failed": failed,
         "savings": STATE.savings() if STATE.savings else None,
+        "taste": STATE.taste() if STATE.taste else "",
         # the sentence the whole demo turns on
         "summary": summary + ".",
     }

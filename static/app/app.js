@@ -11,6 +11,12 @@ function say(text, kind = "") {
   el.className = `status ${kind}`;
 }
 
+function showTaste(text) {
+  const el = $("taste");
+  el.textContent = text ? `Prompts ${text} on this project.` : "";
+  el.hidden = !text;
+}
+
 function showSavings(savings) {
   if (!savings || savings.generations_avoided === 0) {
     $("savings").textContent = "";
@@ -61,6 +67,7 @@ $("brief-form").addEventListener("submit", async (event) => {
     }
     say(body.summary, body.served_from_cache > 0 ? "hit" : "");
     showSavings(body.savings);
+    showTaste(body.taste);
     await refresh();
   } catch (err) {
     say(`Error: ${err.message}`, "err");
