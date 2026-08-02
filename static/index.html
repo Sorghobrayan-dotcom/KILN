@@ -5,176 +5,237 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kiln — assets with a memory</title>
 <meta name="description" content="A curated, versioned asset library built on Genblaze and Backblaze B2. Generate, judge, seal — and never pay for the same generation twice.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏺</text></svg>">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%233b5bdb'/%3E%3Cline x1='4' y1='3' x2='20' y2='3' stroke='%23fff' stroke-width='2.2' stroke-linecap='square'/%3E%3Cline x1='12' y1='3' x2='12' y2='15' stroke='%23fff' stroke-width='1.54'/%3E%3Cpath d='M 12 15 L 16.2 18.4 L 12 21.5 L 7.8 18.4 Z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:     #ffffff;
-    --bg2:    #f7f6f3;
-    --bg3:    #efece5;
-    --line:   #e7e4de;
-    --green:  #1a7f4b;
-    --cyn:    #0f7fa3;
-    --gold:   #b8790f;
-    --danger: #c0392b;
-    --ink:    #111111;
-    --ink2:   #4a4a4a;
-    --muted:  #7a766e;
-    --display: 'Syne', system-ui, sans-serif;
-    --body: 'DM Sans', 'Inter', system-ui, sans-serif;
-    --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
-    --ease: cubic-bezier(.22,.61,.36,1);
+    --bg:      #fdfdfc;
+    --bg2:     #f7f7f5;
+    --line:    rgba(17,17,20,.09);
+    --line2:   rgba(17,17,20,.055);
+    --ink:     #111114;
+    --ink2:    #3f3f46;
+    --muted:   #71717a;
+    --faint:   #a1a1aa;
+    --blue:    #3b5bdb;
+    --blue-d:  #2543b8;
+    --danger:  #c0392b;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
   body {
     background: var(--bg);
     color: var(--ink);
-    font-family: var(--body);
-    line-height: 1.65;
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    letter-spacing: -0.006em;
     -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv05' 1, 'ss03' 1;
   }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 2rem; }
+  @media (max-width: 640px) { .wrap { padding: 0 1.25rem; } }
 
-  /* ---- hero ---- */
-  header {
-    padding: 5rem 0 4rem;
-    background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
-    border-bottom: 1px solid var(--line);
+  /* ── nav ─────────────────────────────────────────────── */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(253,253,252,.82);
+    backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--line2);
   }
-  .mark { font-size: 2.6rem; line-height: 1; }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .brand { display: flex; align-items: center; gap: 0.55rem; text-decoration: none; color: var(--ink); }
+  .brand svg { color: var(--blue); display: block; }
+  .brand span { font-weight: 600; font-size: 0.94rem; letter-spacing: -0.015em; }
+  nav .links { display: flex; gap: 1.4rem; align-items: center; }
+  nav .links a { color: var(--muted); text-decoration: none; font-size: 0.86rem; font-weight: 500; transition: color .15s; }
+  nav .links a:hover { color: var(--ink); }
+  @media (max-width: 640px) { nav .links a.hide-sm { display: none; } }
+
+  /* ── hero: one glow, asymmetric measure ──────────────── */
+  header { position: relative; padding: 6.5rem 0 5rem; overflow: hidden; }
+  header::before {
+    content: '';
+    position: absolute; inset: -40% 30% 40% -10%;
+    background: radial-gradient(closest-side, rgba(59,91,219,.10), transparent 72%);
+    pointer-events: none;
+  }
+  header .wrap { position: relative; }
   h1 {
-    font-family: var(--display);
-    font-weight: 800;
-    font-size: clamp(2.7rem, 7vw, 4.6rem);
+    font-size: clamp(2.9rem, 6.4vw, 4.25rem);
     line-height: 1.02;
-    letter-spacing: -0.035em;
-    margin: 1.1rem 0 1rem;
+    letter-spacing: -0.038em;
+    font-weight: 600;
+    max-width: 15ch;          /* forces the break — the line is designed, not accidental */
+    margin-bottom: 1.4rem;
   }
-  .claim { font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: var(--ink2); max-width: 36ch; margin-bottom: 2.2rem; }
-  .claim b { color: var(--green); font-weight: 500; }
+  .claim { font-size: 1.075rem; color: var(--ink2); max-width: 46ch; margin-bottom: 2.4rem; }
+  .claim b { color: var(--ink); font-weight: 600; }
 
-  .actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
   a.btn {
-    display: inline-block;
-    padding: 0.8rem 1.4rem;
-    border-radius: 0.75rem;
+    display: inline-flex; align-items: baseline; gap: 0.5rem;
+    padding: 0.62rem 1.05rem;
+    border-radius: 7px;
     text-decoration: none;
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-weight: 500; font-size: 0.9rem;
     border: 1px solid var(--line);
-    background: var(--bg);
-    color: var(--ink);
-    transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s;
+    background: #fff; color: var(--ink);
+    box-shadow: 0 1px 2px rgba(17,17,20,.04);
+    transition: background .15s, border-color .15s, transform .15s;
   }
-  a.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(17,17,17,.09); }
+  a.btn:hover { transform: translateY(-1px); border-color: rgba(17,17,20,.18); }
   a.btn.primary {
-    background: var(--green);
-    border-color: var(--green);
-    color: #fff;
-    box-shadow: 0 6px 20px rgba(26,127,75,.25);
+    background: var(--blue); border-color: var(--blue); color: #fff;
+    box-shadow: 0 1px 2px rgba(37,67,184,.30), 0 6px 18px rgba(59,91,219,.18);
   }
-  a.btn.primary:hover { box-shadow: 0 12px 32px rgba(26,127,75,.35); }
-  a.btn small { display: block; font-weight: 400; font-size: 0.78rem; opacity: 0.8; }
+  a.btn.primary:hover { background: var(--blue-d); border-color: var(--blue-d); }
+  a.btn .k { font-family: var(--mono); font-size: 0.76rem; opacity: .72; }
 
-  /* ---- stats ---- */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    border-radius: 0.9rem;
-    overflow: hidden;
-    margin: 3.2rem 0;
+  /* ── the one big number, then the rest small ─────────── */
+  .figures {
+    display: flex; align-items: flex-end; gap: 2.6rem;
+    flex-wrap: wrap;
+    padding: 3rem 0 3.5rem;
+    border-bottom: 1px solid var(--line2);
   }
-  .stat { background: var(--bg); padding: 1.35rem 1.2rem; }
-  .stat .n { font-family: var(--display); font-weight: 800; font-size: 2rem; letter-spacing: -0.03em; }
-  .stat .n.green { color: var(--green); }
-  .stat .l { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+  .figure-lead .n {
+    font-size: clamp(3.6rem, 9vw, 5.6rem);
+    font-weight: 600; letter-spacing: -0.05em; line-height: 0.92;
+    color: var(--blue);
+    font-variant-numeric: tabular-nums;
+  }
+  .figure-lead .l { color: var(--ink2); max-width: 22ch; margin-top: 0.5rem; }
+  .figure-rest { display: flex; gap: 2.2rem; flex-wrap: wrap; padding-bottom: 0.4rem; }
+  .figure-rest div .n { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .figure-rest div .l { font-size: 0.8rem; color: var(--muted); max-width: 16ch; }
 
-  /* ---- sections ---- */
-  section { padding: 3.8rem 0; border-bottom: 1px solid var(--line); }
-  h2 {
-    font-size: 0.74rem;
+  /* ── sections ────────────────────────────────────────── */
+  section { padding: 4.2rem 0; border-bottom: 1px solid var(--line2); }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.695rem;
     text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--green);
-    margin-bottom: 1.5rem;
-    font-weight: 500;
+    letter-spacing: 0.11em;
+    color: var(--faint);
+    margin-bottom: 1.6rem;
   }
-  h3 { font-family: var(--display); font-weight: 700; font-size: 1.1rem; margin-bottom: 0.45rem; letter-spacing: -0.01em; }
-  p { margin-bottom: 1rem; max-width: 68ch; color: var(--ink2); }
-  p b { color: var(--ink); font-weight: 500; }
-  .muted { color: var(--muted); font-size: 0.92rem; }
+  h2 {
+    font-size: 1.65rem; font-weight: 600; letter-spacing: -0.028em;
+    line-height: 1.2; margin-bottom: 0.9rem; max-width: 24ch;
+  }
+  p { color: var(--ink2); max-width: 64ch; margin-bottom: 1rem; }
+  p b { color: var(--ink); font-weight: 600; }
+  .note { color: var(--muted); font-size: 0.875rem; }
+  code {
+    font-family: var(--mono); font-size: 0.845em;
+    background: var(--bg2); border: 1px solid var(--line2);
+    padding: 0.08em 0.34em; border-radius: 4px; color: var(--ink);
+  }
 
-  .asks { display: grid; gap: 0.55rem; list-style: none; }
+  /* questions: a rule, not a card */
+  .asks { list-style: none; margin: 1.8rem 0 0; }
   .asks li {
-    padding: 0.9rem 1.1rem;
-    background: var(--bg2);
-    border: 1px solid var(--line);
-    border-left: 3px solid var(--green);
-    border-radius: 0 0.6rem 0.6rem 0;
-    font-style: italic;
+    padding: 0.75rem 0 0.75rem 1.15rem;
+    border-left: 2px solid var(--line);
     color: var(--ink2);
+    transition: border-color .15s, color .15s;
   }
+  .asks li:hover { border-left-color: var(--blue); color: var(--ink); }
 
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
-  .card {
-    background: var(--bg2);
-    border: 1px solid var(--line);
-    border-radius: 0.85rem;
-    padding: 1.3rem;
-    transition: transform .2s var(--ease), box-shadow .2s var(--ease);
+  /* B2 surfaces: a table, because it is tabular */
+  table { width: 100%; border-collapse: collapse; margin-top: 1.6rem; font-size: 0.9rem; }
+  th {
+    text-align: left; font-weight: 500; color: var(--faint);
+    font-family: var(--mono); font-size: 0.695rem; text-transform: uppercase; letter-spacing: 0.1em;
+    padding-bottom: 0.7rem; border-bottom: 1px solid var(--line);
   }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(17,17,17,.07); }
-  .card p { font-size: 0.9rem; margin: 0; color: var(--muted); }
-  .card code { font-family: var(--mono); font-size: 0.8rem; color: var(--ink); background: var(--bg3); padding: 0.1rem 0.3rem; border-radius: 0.25rem; }
+  td { padding: 0.85rem 1rem 0.85rem 0; border-bottom: 1px solid var(--line2); vertical-align: top; color: var(--ink2); }
+  td:first-child { color: var(--ink); font-weight: 500; white-space: nowrap; }
+  td code { background: none; border: none; padding: 0; color: var(--muted); font-size: 0.8rem; }
+  @media (max-width: 700px) { table, thead, tbody, tr, td, th { display: block; } th { display: none; } td { border: none; padding: 0.15rem 0; } tr { padding: 0.9rem 0; border-bottom: 1px solid var(--line2); display: block; } }
 
-  /* the one dark element: it should pull the eye */
+  /* seams: numbered, not boxed */
+  .seams { counter-reset: seam; margin-top: 1.8rem; }
+  .seam { display: grid; grid-template-columns: 2rem 1fr; gap: 1.1rem; padding: 1.4rem 0; border-top: 1px solid var(--line2); }
+  .seam::before {
+    counter-increment: seam; content: counter(seam, decimal-leading-zero);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--blue); padding-top: 0.15rem;
+  }
+  .seam h3 { font-size: 0.985rem; font-weight: 600; letter-spacing: -0.012em; margin-bottom: 0.3rem; }
+  .seam p { margin: 0; font-size: 0.9rem; max-width: 62ch; }
+
+  /* findings: three columns, hairline separated, no boxes */
+  .finds { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; margin-top: 1.8rem; border-top: 1px solid var(--line2); }
+  .find { padding: 1.5rem 1.5rem 1.5rem 0; border-right: 1px solid var(--line2); }
+  .find:last-child { border-right: none; }
+  .find h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .find p { font-size: 0.86rem; margin: 0; }
+  @media (max-width: 700px) { .find { border-right: none; border-bottom: 1px solid var(--line2); padding-right: 0; } .find:last-child { border-bottom: none; } }
+
+  /* the single dark element */
   pre {
-    background: #14140f;
-    color: #e8e6e0;
-    border-radius: 0.85rem;
-    padding: 1.3rem 1.4rem;
+    background: #0e0e11;
+    color: #d7d7dd;
+    border-radius: 10px;
+    padding: 1.4rem 1.5rem;
     overflow-x: auto;
     font-family: var(--mono);
-    font-size: 0.83rem;
-    line-height: 1.75;
-    margin-bottom: 1rem;
-    box-shadow: 0 14px 40px rgba(17,17,17,.16);
+    font-size: 0.795rem;
+    line-height: 1.85;
+    margin-top: 1.8rem;
+    box-shadow: 0 1px 2px rgba(17,17,20,.06), 0 18px 44px rgba(17,17,20,.10);
   }
-  pre .c { color: #8a8578; }
-  pre .g { color: #6dd39a; }
-  pre .y { color: #f0b849; }
+  pre .c { color: #6b6b78; }
+  pre .g { color: #5ec98a; }
+  pre .y { color: #e0a84a; }
+  pre .b { color: #7f9cf5; }
 
-  footer { padding: 3.2rem 0 4.5rem; color: var(--muted); font-size: 0.9rem; }
-  footer p { color: var(--muted); }
-  footer a { color: var(--green); }
-
-  @media (max-width: 560px) {
-    header { padding: 3.2rem 0 2.8rem; }
-    .actions { flex-direction: column; }
-    a.btn { text-align: center; }
-  }
+  footer { padding: 3.4rem 0 5rem; color: var(--muted); font-size: 0.875rem; }
+  footer p { color: var(--muted); max-width: 62ch; }
+  footer a { color: var(--blue); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  .colophon { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; color: var(--faint); }
+  .colophon svg { color: var(--line); }
 </style>
 </head>
 <body>
 
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <line x1="4" y1="3" x2="20" y2="3" stroke="currentColor" stroke-width="1.9" stroke-linecap="square"/>
+        <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.33"/>
+        <path d="M 12 15 L 16.2 18.4 L 12 21.5 L 7.8 18.4 Z" fill="currentColor"/>
+      </svg>
+      <span>Kiln</span>
+    </a>
+    <div class="links">
+      <a class="hide-sm" href="#proof">Proof</a>
+      <a class="hide-sm" href="#storage">Storage</a>
+      <a class="hide-sm" href="#seams">Genblaze</a>
+      <a href="/app/">Open app &rarr;</a>
+    </div>
+  </div>
+</nav>
+
 <header>
   <div class="wrap">
-    <div class="mark">🏺</div>
     <h1>Assets with a memory.</h1>
     <p class="claim">
-      Genblaze gives you provenance <b>per run</b>.<br>
-      Kiln gives you a curated library <b>across runs</b>.
+      Genblaze gives you provenance <b>per run</b>. Kiln gives you a curated
+      library <b>across runs</b> — generate, judge, seal, and never pay for the
+      same generation twice.
     </p>
     <div class="actions">
-      <a class="btn primary" href="/app/">Open the live app<small>test token: kiln-demo-2026</small></a>
+      <a class="btn primary" href="/app/">Open the live app <span class="k">kiln-demo-2026</span></a>
       <!-- TODO: replace with the YouTube URL before submitting -->
-      <a class="btn" href="#" id="video">Watch the 3-minute demo</a>
+      <a class="btn" href="#" id="video">Watch the demo</a>
       <!-- TODO: replace with the GitHub URL before submitting -->
       <a class="btn" href="#" id="repo">Read the code</a>
     </div>
@@ -183,16 +244,22 @@
 
 <div class="wrap">
 
-  <div class="stats">
-    <div class="stat"><div class="n green">50%</div><div class="l">of generations served from the bucket</div></div>
-    <div class="stat"><div class="n">76</div><div class="l">tests, none needing a network</div></div>
-    <div class="stat"><div class="n">3</div><div class="l">Genblaze seams extended</div></div>
-    <div class="stat"><div class="n">0</div><div class="l">API keys needed to run it</div></div>
+  <div class="figures">
+    <div class="figure-lead">
+      <div class="n">50%</div>
+      <div class="l">of generations served from the bucket instead of a provider</div>
+    </div>
+    <div class="figure-rest">
+      <div><div class="n">76</div><div class="l">tests, none needing a network</div></div>
+      <div><div class="n">3</div><div class="l">Genblaze seams extended</div></div>
+      <div><div class="n">0</div><div class="l">API keys needed to run it</div></div>
+    </div>
   </div>
 
   <section>
-    <h2>The problem</h2>
-    <p>Generating media is the easy part now — every provider does it. What breaks a small team is everything after.</p>
+    <p class="eyebrow">The problem</p>
+    <h2>Generating media is the easy part now.</h2>
+    <p>Every provider does it. What breaks a small team is everything after — and none of it is about model quality.</p>
     <ul class="asks">
       <li>Which prompt made this file? Which model? Can I make it again?</li>
       <li>I regenerated that yesterday. I just paid for it twice.</li>
@@ -201,68 +268,114 @@
     </ul>
   </section>
 
-  <section>
-    <h2>The proof</h2>
-    <p>Kiln seals a version. A build pulls it, verifying every hash before a byte touches disk. This is that chain, run against the live bucket:</p>
+  <section id="proof">
+    <p class="eyebrow">The proof</p>
+    <h2>A sealed version, pulled into a build.</h2>
+    <p>Kiln seals a version. A build pulls it, verifying every hash <b>before a byte touches disk</b>. This is that chain, run against the live bucket:</p>
 <pre><span class="c"># seal what a human approved</span>
 providence v1 <span class="g">sealed with 6 assets</span>
 midnight-radio v1 <span class="g">sealed with 3 assets</span>
 
 <span class="c"># a build pulls it — one stdlib file, no Kiln install</span>
-$ python examples/pull.py <span class="y">…/providence/v1/manifest.json</span> --into ./art-drop
+<span class="b">$</span> python examples/pull.py <span class="y">…/providence/v1/manifest.json</span> --into ./art-drop
 providence v1: <span class="g">6 pulled, 0 refused</span>
 
 <span class="c"># now alter one sha256 in the manifest</span>
-$ python examples/pull.py <span class="y">…/tampered.json</span> --into ./art-drop
+<span class="b">$</span> python examples/pull.py <span class="y">…/tampered.json</span> --into ./art-drop
   <span class="y">REFUSED</span> 000000…000000 — hash mismatch or missing url
 providence v1: 5 pulled, <span class="y">1 refused</span>
-$ echo $?
+<span class="b">$</span> echo $?
 <span class="y">1</span>   <span class="c">— the build stops</span></pre>
-    <p class="muted">Two projects, one instance: a narrative game and a podcast. Nothing in the code knows what a game is.</p>
+    <p class="note">Two projects, one instance: a narrative game and a podcast. Nothing in the code knows what a game is.</p>
   </section>
 
-  <section>
-    <h2>How it uses Backblaze B2</h2>
-    <p>B2 is not where Kiln puts files at the end. <b>B2 is the database.</b> The service holds no state, so it can be redeployed, replicated or killed without losing a decision anyone made — and the cache stays warm across deploys.</p>
-    <div class="cards">
-      <div class="card"><h3>Assets</h3><p><code>kiln/assets/ab/cd/&lt;sha256&gt;</code> — content-addressable, so identical bytes occupy one key forever.</p></div>
-      <div class="card"><h3>Manifests</h3><p><code>kiln/manifests/&lt;run&gt;.json</code> — Genblaze’s canonical provenance, hash-verified, one per run.</p></div>
-      <div class="card"><h3>The step cache</h3><p><code>&lt;project&gt;/cache/&lt;key&gt;.json</code> — the piece the whole project rests on.</p></div>
-      <div class="card"><h3>Sealed versions</h3><p><code>&lt;project&gt;/v&lt;N&gt;/manifest.json</code> — immutable. A build pinned to v2 keeps building the same thing.</p></div>
+  <section id="storage">
+    <p class="eyebrow">Backblaze B2</p>
+    <h2>B2 is not the cupboard. It is the database.</h2>
+    <p>The service holds no state, so it can be redeployed, replicated or killed without losing a decision anyone made — and the cache stays warm across deploys.</p>
+    <table>
+      <thead><tr><th>Surface</th><th>Key</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Assets</td>
+          <td><code>kiln/assets/ab/cd/&lt;sha256&gt;</code></td>
+          <td>Content-addressable — identical bytes occupy one key, forever.</td>
+        </tr>
+        <tr>
+          <td>Manifests</td>
+          <td><code>kiln/manifests/&lt;run&gt;.json</code></td>
+          <td>Genblaze’s canonical provenance, hash-verified, one per run.</td>
+        </tr>
+        <tr>
+          <td>Step cache</td>
+          <td><code>&lt;project&gt;/cache/&lt;key&gt;.json</code></td>
+          <td>The piece the whole project rests on.</td>
+        </tr>
+        <tr>
+          <td>Sealed versions</td>
+          <td><code>&lt;project&gt;/v&lt;N&gt;/manifest.json</code></td>
+          <td>Immutable. A build pinned to v2 keeps building the same thing.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="seams">
+    <p class="eyebrow">Genblaze</p>
+    <h2>Kiln does not wrap Genblaze. It extends it.</h2>
+    <p>Three published seams, each implemented rather than worked around.</p>
+    <div class="seams">
+      <div class="seam">
+        <div>
+          <h3>A durable <code>StepCache</code></h3>
+          <p>The shipped cache is disk-backed: it dies with the container and is never shared between workers, so the same prompt is paid for again after every redeploy. Ours implements the same contract against B2, reusing Genblaze’s own <code>step_cache_key</code>.</p>
+        </div>
+      </div>
+      <div class="seam">
+        <div>
+          <h3>A provider the SDK doesn’t ship</h3>
+          <p><code>SyncProvider</code> is public, so a Pollinations adapter is fifty lines rather than a fork. Its seed comes from the prompt hash — the same brief redraws the same picture, so a cache hit and a fresh run agree in the output as well as in the manifest.</p>
+        </div>
+      </div>
+      <div class="seam">
+        <div>
+          <h3>A <code>StorageBackend</code></h3>
+          <p>An in-memory implementation, so the credential-free path runs the <em>same</em> sink, transfer and URL-rewriting code as production instead of skipping it.</p>
+        </div>
+      </div>
     </div>
   </section>
 
   <section>
-    <h2>How it uses Genblaze</h2>
-    <p>Kiln does not wrap Genblaze. It extends it at three published seams.</p>
-    <div class="cards">
-      <div class="card">
-        <h3>A durable <code>StepCache</code></h3>
-        <p>The shipped cache is disk-backed: it dies with the container and is never shared between workers, so the same prompt is paid for again after every redeploy. Ours implements the same contract against B2.</p>
+    <p class="eyebrow">Field notes</p>
+    <h2>Three things we found by using it.</h2>
+    <div class="finds">
+      <div class="find">
+        <h3>A cache hit is invisible</h3>
+        <p>Genblaze returns the cached step verbatim — no flag, no tracer event — so an app can’t tell a hit from a fresh run, and can’t tell its user what was saved.</p>
       </div>
-      <div class="card">
-        <h3>A provider the SDK doesn’t ship</h3>
-        <p><code>SyncProvider</code> is public, so a Pollinations adapter is fifty lines rather than a fork. Its seed comes from the prompt hash — the same brief redraws the same picture.</p>
+      <div class="find">
+        <h3>Cached before uploaded</h3>
+        <p>A failed transfer leaves an entry pointing at a temp file the next process can’t read. That prompt then breaks permanently. We hit it three runs in a row.</p>
       </div>
-      <div class="card">
-        <h3>A <code>StorageBackend</code></h3>
-        <p>An in-memory implementation, so the credential-free path runs the <em>same</em> sink and transfer code as production instead of skipping it.</p>
+      <div class="find">
+        <h3>Writes are path-guarded</h3>
+        <p>Providers must write under temp or a declared <code>output_dir</code>. Correct, and invisible until a transfer fails citing allowed directories.</p>
       </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>Three things we found by using it</h2>
-    <div class="cards">
-      <div class="card"><h3>A cache hit is invisible</h3><p>Genblaze returns the cached step verbatim — no flag, no tracer event — so an app can’t tell a hit from a fresh run, and can’t tell its user what was saved.</p></div>
-      <div class="card"><h3>Cached before uploaded</h3><p>A failed transfer leaves an entry pointing at a temp file the next process can’t read. That prompt then breaks <em>permanently</em>. We hit it three runs in a row.</p></div>
-      <div class="card"><h3>Writes are path-guarded</h3><p>Providers must write under temp or a declared <code>output_dir</code>. Correct, and invisible until a transfer fails citing allowed directories.</p></div>
     </div>
   </section>
 
   <footer>
+    <div class="colophon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <line x1="4" y1="3" x2="20" y2="3" stroke="currentColor" stroke-width="1.9" stroke-linecap="square"/>
+        <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.33"/>
+        <path d="M 12 15 L 16.2 18.4 L 12 21.5 L 7.8 18.4 Z" fill="currentColor"/>
+      </svg>
+      <span>A plumb line: gravity used as a measure of trueness.</span>
+    </div>
     <p>Built for a game studio because that is where I hit the problem. The loop — generate, judge, seal, never pay twice — belongs to any team producing media at volume.</p>
-    <p>MIT licensed. Built with <a href="https://github.com/backblaze-labs/genblaze">Genblaze</a> and <a href="https://www.backblaze.com/cloud-storage">Backblaze B2</a>.</p>
+    <p style="margin-top:.8rem">MIT licensed. Built with <a href="https://github.com/backblaze-labs/genblaze">Genblaze</a> and <a href="https://www.backblaze.com/cloud-storage">Backblaze B2</a>.</p>
   </footer>
 
 </div>
