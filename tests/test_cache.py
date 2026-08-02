@@ -68,6 +68,36 @@ def test_hits_and_misses_are_counted():
     assert (c.misses, c.hits) == (1, 2)
 
 
+def test_an_entry_pointing_at_a_local_file_is_discarded():
+    """A step is cached before its assets are uploaded, so a failed transfer
+    leaves an entry referencing a temp file that the next process cannot read.
+    Serving it would break that prompt permanently."""
+    from genblaze_core.models.asset import Asset
+
+    c = B2StepCache(MemoryBlobs(), prefix="demo/cache")
+    step = a_step()
+    step.assets.append(Asset(url="file:///tmp/gone.jpg", media_type="image/jpeg"))
+    c.put(step, step)
+
+    assert c.get(a_step()) is None
+    assert c.stale == 1
+    assert c.hits == 0
+
+
+def test_an_entry_with_a_durable_url_is_served():
+    from genblaze_core.models.asset import Asset
+
+    c = B2StepCache(MemoryBlobs(), prefix="demo/cache")
+    step = a_step()
+    step.assets.append(Asset(url="https://s3.eu-central-003.backblazeb2.com/b/a.jpg",
+                             media_type="image/jpeg"))
+    c.put(step, step)
+
+    hit = c.get(a_step())
+    assert hit is not None and was_cache_hit(hit)
+    assert c.stale == 0
+
+
 def test_corrupt_entry_is_a_miss_not_a_crash():
     blobs = MemoryBlobs()
     c = B2StepCache(blobs, prefix="demo/cache")

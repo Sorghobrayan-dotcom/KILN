@@ -53,6 +53,12 @@ def _gmi_image(st: Settings):
     return GMICloudImageProvider(api_key=st.gmi_api_key)
 
 
+def _pollinations(st: Settings):
+    from kiln.pollinations import PollinationsImageProvider
+
+    return PollinationsImageProvider()
+
+
 def _local_image(st: Settings):
     from kiln.local_provider import LocalImageProvider
 
@@ -64,9 +70,11 @@ KINDS: tuple[Kind, ...] = (
          _elevenlabs_tts, "elevenlabs_api_key", "elevenlabs.io — free tier"),
     Kind("sfx", "Sound effect", Modality.AUDIO, "eleven_text_to_sound_v2",
          _elevenlabs_sfx, "elevenlabs_api_key", "elevenlabs.io — free tier"),
+    Kind("art", "Concept art", Modality.IMAGE, "sana",
+         _pollinations, "", "pollinations.ai — free, no credential"),
     Kind("video", "Establishing shot", Modality.VIDEO, "Veo3-Fast",
          _gmi_video, "gmi_api_key", "gmicloud.ai — hackathon credits"),
-    Kind("image", "Concept art", Modality.IMAGE, "reve-remix-20250915",
+    Kind("image", "Concept art (GMI)", Modality.IMAGE, "reve-remix-20250915",
          _gmi_image, "gmi_api_key", "gmicloud.ai — hackathon credits"),
     Kind("sketch", "Offline sketch", Modality.IMAGE, "kiln-local-1",
          _local_image, "", "always available, no key, no network"),

@@ -11,19 +11,30 @@ class FakeSettings:
         self.gmi_api_key = keys.get("gmi", "")
 
 
-def test_sketch_is_always_available_so_a_fresh_clone_still_runs():
-    keys = {k.key for k in available(FakeSettings())}
-    assert keys == {"sketch"}
+# kinds that need no credential at all, so an empty .env still demonstrates Kiln
+FREE = {"sketch", "art"}
+
+
+def test_keyless_kinds_are_always_available_so_a_fresh_clone_still_runs():
+    assert {k.key for k in available(FakeSettings())} == FREE
 
 
 def test_elevenlabs_key_unlocks_voice_and_sfx():
     keys = {k.key for k in available(FakeSettings(elevenlabs="sk_x"))}
-    assert keys == {"sketch", "voice", "sfx"}
+    assert keys == FREE | {"voice", "sfx"}
 
 
 def test_gmi_key_unlocks_video_and_image():
     keys = {k.key for k in available(FakeSettings(gmi="gmi_x"))}
-    assert keys == {"sketch", "video", "image"}
+    assert keys == FREE | {"video", "image"}
+
+
+def test_art_is_a_real_generator_not_a_placeholder():
+    """'art' goes to Pollinations, which is free but is still an AI service —
+    unlike 'sketch', which draws locally and must never be sold as generation."""
+    art = next(k for k in KINDS if k.key == "art")
+    assert art.needs == ""
+    assert "pollinations" in art.hint
 
 
 def test_every_kind_available_with_both_keys():
