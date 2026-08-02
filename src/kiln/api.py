@@ -194,6 +194,22 @@ def files(path: str):
     )
 
 
+class _RevalidatingStatic(StaticFiles):
+    """Static files that must be revalidated, not served blind from cache.
+
+    A redeploy changes app.js while index.html keeps its name, so a browser
+    holding the old script pairs new markup with stale code and the page
+    misbehaves in ways nobody can reproduce. ``no-cache`` does not disable
+    caching — it requires a conditional request, so an unchanged file still
+    comes back 304 and costs nothing.
+    """
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 def mount_static(directory: str = "static") -> None:
     """Mounted last, so /api and /files always win over the catch-all."""
-    app.mount("/", StaticFiles(directory=directory, html=True), name="static")
+    app.mount("/", _RevalidatingStatic(directory=directory, html=True), name="static")

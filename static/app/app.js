@@ -69,16 +69,33 @@ $("brief-form").addEventListener("submit", async (event) => {
   }
 });
 
+// Dropped assets leave the working view but never the ledger: the whole claim
+// of this project is that no decision is lost. Hidden, counted, one click away.
+let showDropped = false;
+
 async function refresh() {
   if (!project()) return;
   const res = await fetch(`/api/projects/${encodeURIComponent(project())}/staging`);
   const { assets } = await res.json();
 
-  $("empty").hidden = assets.length > 0;
+  const dropped = assets.filter((a) => a.state === "rejected");
+  const visible = showDropped ? assets : assets.filter((a) => a.state !== "rejected");
+
+  const toggle = $("dropped");
+  if (dropped.length === 0) {
+    toggle.hidden = true;
+  } else {
+    toggle.hidden = false;
+    toggle.textContent = showDropped
+      ? `Hide ${dropped.length} dropped`
+      : `${dropped.length} dropped — show`;
+  }
+
+  $("empty").hidden = visible.length > 0;
   const grid = $("grid");
   grid.replaceChildren();
 
-  for (const asset of assets) {
+  for (const asset of visible) {
     const card = document.createElement("div");
     card.className = `card state-${asset.state}`;
     card.append(preview(asset));
@@ -259,6 +276,11 @@ $("publish").addEventListener("click", async () => {
     `${project()}/v${body.version}/manifest.json in B2. That version can never change.`,
   );
   await refresh();
+});
+
+$("dropped").addEventListener("click", () => {
+  showDropped = !showDropped;
+  refresh();
 });
 
 loadKinds().then(refresh);
