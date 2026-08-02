@@ -28,11 +28,16 @@ assert blobs.get(key) == b"kiln was here", "read-back mismatch"
 assert key in blobs.keys("smoke/"), "listing did not include the key"
 print(f"\nB2 put/get/list  OK  -> {key}")
 
-# the component the whole submission rests on, against the real bucket
+# The component the whole submission rests on, against the real bucket.
+# The prompt is unique per run: the cache is durable by design, so reusing one
+# would find last run's entry and the "cold miss" assertion would be a lie.
 cache = B2StepCache(blobs, prefix="smoke/cache")
-step = Step(provider="nvidia", model="flux.1-schnell", prompt="a plumb line", modality=Modality.IMAGE)
-assert cache.get(step) is None, "expected a cold miss"
+prompt = f"a plumb line, run {key}"
+step = Step(provider="kiln-smoke", model="none", prompt=prompt, modality=Modality.IMAGE)
+
+assert cache.get(step) is None, "expected a cold miss on a prompt never seen"
 cache.put(step, step)
 hit = cache.get(step)
-assert hit is not None and hit.prompt == "a plumb line", "cache did not round-trip"
+assert hit is not None and hit.prompt == prompt, "cache did not round-trip"
 print("B2StepCache      OK  -> miss, put, hit (durable, survives any redeploy)")
+print(f"                 {cache.hits} hit, {cache.misses} miss, {cache.stale} stale")

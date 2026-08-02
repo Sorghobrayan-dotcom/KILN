@@ -12,6 +12,9 @@ step" means; only the medium changes.
 """
 import json
 import logging
+from pathlib import Path
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 
 from genblaze_core.models.step import Step
 from genblaze_core.pipeline.cache import step_cache_key
@@ -28,13 +31,26 @@ def was_cache_hit(step: Step) -> bool:
     return bool((step.metadata or {}).get(HIT_MARKER))
 
 
-def _points_at_local_files(step: Step) -> bool:
-    """True if any asset still lives on the machine that made it.
+def _is_unreadable(step: Step) -> bool:
+    """True if any asset's bytes can no longer be fetched.
 
-    Durable assets carry an http(s) URL written by the sink. A file:// URL means
-    the upload never happened, so the bytes are on somebody else's disk.
+    A durable asset carries an http(s) URL written by the sink, and is fine. A
+    file:// URL means the upload never happened — usually because the transfer
+    failed after the step was already cached — so the bytes sit in a temp
+    directory that the next process will not find.
+
+    The test is whether the file is still *there*, not whether the URL is local:
+    a deployment with no sink at all keeps its assets on disk quite legitimately,
+    and refusing those would disable the cache for the whole offline path.
     """
-    return any((a.url or "").startswith("file://") for a in (step.assets or []))
+    for asset in step.assets or []:
+        url = asset.url or ""
+        if not url.startswith("file://"):
+            continue
+        path = Path(url2pathname(urlparse(url).path))
+        if not path.exists():
+            return True
+    return False
 
 
 class B2StepCache:
@@ -83,13 +99,13 @@ class B2StepCache:
             logger.warning("Cache entry unreadable (treating as miss): %s", exc)
             return None
 
-        if _points_at_local_files(hit):
+        if _is_unreadable(hit):
             # A step is cached before its assets are transferred, so a run whose
-            # upload failed leaves an entry pointing at a temp file. That file is
-            # gone by the next process, and replaying it breaks the prompt
-            # forever. Treat it as a miss and let the run happen again.
+            # upload failed leaves an entry pointing at a temp file that is gone
+            # by the next process. Replaying it breaks that prompt forever, so
+            # treat it as a miss and let the run happen again.
             self._stale += 1
-            logger.warning("Cache entry references a local path; regenerating")
+            logger.warning("Cache entry points at a file that no longer exists; regenerating")
             return None
 
         # Genblaze returns a cached Step verbatim: no flag, no tracer event, so a
