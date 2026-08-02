@@ -1,5 +1,6 @@
 import pytest
 
+from kiln.cache import HIT_MARKER
 from kiln.forge import ForgeError, harvest, region_of
 
 
@@ -10,12 +11,15 @@ class FakeAsset:
 
 
 class FakeStep:
+    """Mirrors the fields of genblaze_core.models.step.Step that harvest() reads."""
+
     def __init__(self, assets=(), error=None, status="succeeded", model="flux.1-schnell", cached=False):
         self.assets = list(assets)
         self.error = error
         self.status = status
         self.model = model
-        self.cached = cached
+        # a hit is signalled through metadata, the way B2StepCache stamps it
+        self.metadata = {HIT_MARKER: True} if cached else {}
 
 
 class FakeRun:

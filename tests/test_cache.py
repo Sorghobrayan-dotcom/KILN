@@ -2,7 +2,7 @@ from genblaze_core import Modality
 from genblaze_core.models.step import Step
 
 from kiln.blobs import MemoryBlobs
-from kiln.cache import B2StepCache
+from kiln.cache import B2StepCache, was_cache_hit
 
 
 def a_step(prompt="a knight"):
@@ -37,6 +37,35 @@ def test_survives_a_new_instance_same_bucket():
     B2StepCache(blobs, prefix="demo/cache").put(a_step(), a_step())
     # a fresh process against the same bucket — this is the whole point
     assert B2StepCache(blobs, prefix="demo/cache").get(a_step()) is not None
+
+
+def test_a_hit_is_marked_because_genblaze_returns_it_unflagged():
+    c = B2StepCache(MemoryBlobs(), prefix="demo/cache")
+    step = a_step()
+    assert not was_cache_hit(step)
+    c.put(step, step)
+    hit = c.get(step)
+    assert was_cache_hit(hit), "a caller cannot otherwise tell a hit from a fresh run"
+
+
+def test_marking_a_hit_preserves_existing_metadata():
+    c = B2StepCache(MemoryBlobs(), prefix="demo/cache")
+    step = a_step()
+    step.metadata = {"project": "providence"}
+    c.put(step, step)
+    hit = c.get(step)
+    assert hit.metadata["project"] == "providence"
+    assert was_cache_hit(hit)
+
+
+def test_hits_and_misses_are_counted():
+    c = B2StepCache(MemoryBlobs(), prefix="demo/cache")
+    step = a_step()
+    c.get(step)
+    c.put(step, step)
+    c.get(step)
+    c.get(step)
+    assert (c.misses, c.hits) == (1, 2)
 
 
 def test_corrupt_entry_is_a_miss_not_a_crash():
