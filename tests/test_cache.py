@@ -68,7 +68,7 @@ def test_hits_and_misses_are_counted():
     assert (c.misses, c.hits) == (1, 2)
 
 
-def test_an_entry_pointing_at_a_local_file_is_discarded():
+def test_an_entry_whose_local_file_vanished_is_discarded():
     """A step is cached before its assets are uploaded, so a failed transfer
     leaves an entry referencing a temp file that the next process cannot read.
     Serving it would break that prompt permanently."""
@@ -76,12 +76,30 @@ def test_an_entry_pointing_at_a_local_file_is_discarded():
 
     c = B2StepCache(MemoryBlobs(), prefix="demo/cache")
     step = a_step()
-    step.assets.append(Asset(url="file:///tmp/gone.jpg", media_type="image/jpeg"))
+    step.assets.append(Asset(url="file:///tmp/definitely-gone-42.jpg", media_type="image/jpeg"))
     c.put(step, step)
 
     assert c.get(a_step()) is None
     assert c.stale == 1
     assert c.hits == 0
+
+
+def test_an_entry_whose_local_file_still_exists_is_served(tmp_path):
+    """A deployment with no sink keeps its assets on disk quite legitimately.
+    Refusing those would disable the cache for the entire offline path."""
+    from genblaze_core.models.asset import Asset
+
+    real = tmp_path / "drawn.png"
+    real.write_bytes(b"\x89PNG")
+
+    c = B2StepCache(MemoryBlobs(), prefix="demo/cache")
+    step = a_step()
+    step.assets.append(Asset(url=real.resolve().as_uri(), media_type="image/png"))
+    c.put(step, step)
+
+    hit = c.get(a_step())
+    assert hit is not None and was_cache_hit(hit)
+    assert c.stale == 0
 
 
 def test_an_entry_with_a_durable_url_is_served():
