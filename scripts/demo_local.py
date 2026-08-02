@@ -10,13 +10,15 @@ import _env
 
 _env.load()
 
-from genblaze_core import LoggingTracer, Modality, Pipeline  # noqa: E402
+from genblaze_core import KeyStrategy, LoggingTracer, Modality, Pipeline  # noqa: E402
+from genblaze_core.storage.sink import ObjectStorageSink  # noqa: E402
 
 from kiln.blobs import MemoryBlobs  # noqa: E402
 from kiln.cache import B2StepCache  # noqa: E402
 from kiln.forge import harvest  # noqa: E402
 from kiln.library import Library  # noqa: E402
 from kiln.local_provider import LocalImageProvider  # noqa: E402
+from kiln.memory_backend import MemoryBackend  # noqa: E402
 
 PROMPTS = [
     "NPC portrait: Martha, keeper of the house, monochrome engraving",
@@ -25,9 +27,11 @@ PROMPTS = [
 ]
 
 blobs = MemoryBlobs()
+backend = MemoryBackend()
 cache = B2StepCache(blobs, prefix="providence/cache")
 library = Library(blobs, "providence")
 provider = LocalImageProvider()
+sink = ObjectStorageSink(backend, prefix="providence", key_strategy=KeyStrategy.CONTENT_ADDRESSABLE)
 
 
 def run(prompt: str):
@@ -36,7 +40,7 @@ def run(prompt: str):
         .cache(cache)
         .tracer(LoggingTracer())
         .step(provider, model="kiln-local-1", prompt=prompt, modality=Modality.IMAGE)
-        .run(raise_on_failure=False)
+        .run(sink=sink, raise_on_failure=False)
     )
     return harvest(result, prompt, provider.name)
 

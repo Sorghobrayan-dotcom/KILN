@@ -27,6 +27,31 @@ class MemoryBlobs:
         return [k for k in self._d if k.startswith(prefix)]
 
 
+class BackendBlobs:
+    """Read and write Kiln's state through a Genblaze StorageBackend.
+
+    Without this, a credential-free deployment splits its bytes in two: Genblaze
+    puts assets in the backend, Kiln puts the index and the cache in its own
+    store, and ``/files/`` can only serve one of them — so the pictures in the
+    gallery are dead links. Pointing both at the same backend means a clone with
+    an empty .env gets a browsable library, not a list of broken images.
+    """
+
+    def __init__(self, backend) -> None:
+        self._backend = backend
+
+    def put(self, key: str, data: bytes, content_type: str = "application/octet-stream") -> None:
+        self._backend.put(key, data, content_type=content_type)
+
+    def get(self, key: str) -> bytes | None:
+        if not self._backend.exists(key):
+            return None
+        return self._backend.get(key)
+
+    def keys(self, prefix: str = "") -> list[str]:
+        return [entry.key for entry in self._backend.list(prefix).entries]
+
+
 class B2Blobs:
     def __init__(self, bucket: str, key_id: str, app_key: str, endpoint: str) -> None:
         import boto3
