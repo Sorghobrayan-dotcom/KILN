@@ -1,3 +1,15 @@
+---
+title: Kiln
+emoji: 🏺
+colorFrom: gray
+colorTo: yellow
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: A curated, versioned asset library on Genblaze and Backblaze B2
+---
+
 # Kiln — assets with a memory
 
 > Built for a game studio because that's where I hit the problem. The loop — generate, judge, seal, never pay twice — belongs to any team producing media at volume.
