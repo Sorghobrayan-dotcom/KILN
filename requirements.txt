@@ -1,0 +1,8 @@
+genblaze
+genblaze-s3
+genblaze-nvidia
+fastapi
+uvicorn[standard]
+pillow
+httpx
+pytest
