@@ -19,7 +19,8 @@ from kiln.blobs import B2Blobs, BackendBlobs  # noqa: E402
 from kiln.config import settings  # noqa: E402
 from kiln.forge import b2_sink  # noqa: E402
 from kiln.kinds import available, roster  # noqa: E402
-from kiln.memory_backend import MemoryBackend  # noqa: E402
+from kiln.memory_backend import MemoryBackend
+from kiln.rewriter import nvidia_chat  # noqa: E402
 from kiln.service import Forge  # noqa: E402
 
 st = settings()
@@ -44,12 +45,14 @@ else:
     manifest_key_from_url = backend.key_from_url
     print("storage : memory (no B2 keys) — assets served from /files/")
 
-forge = Forge(blobs, st, sink=sink)
+# the taste rewriter is optional: no key, no call, plain expansion
+forge = Forge(blobs, st, sink=sink, chat=nvidia_chat(st.nvidia_api_key))
 
 STATE.blobs = blobs
 STATE.token = st.kiln_token
 STATE.generate = forge.generate
 STATE.savings = lambda: forge.savings
+STATE.taste = lambda: forge.taste_summary
 STATE.roster = lambda: roster(st)
 STATE.manifest_key_from_url = manifest_key_from_url
 

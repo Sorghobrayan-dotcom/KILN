@@ -12,18 +12,14 @@ from kiln.cache import B2StepCache
 from kiln.config import Settings
 from kiln.forge import ForgeError, harvest
 from kiln.kinds import Kind, resolve
+from kiln.library import Library
+from kiln.rewriter import TasteRewriter, plain_expand
+from kiln.taste import Taste
 
 
-def expand(description: str, count: int) -> list[str]:
-    """One brief becomes N prompts, deterministically.
-
-    Deterministic on purpose: the cache key is built from the prompt, so a
-    randomised expansion would miss its own cache every time and the whole
-    premise of the tool would quietly stop working.
-    """
-    if count == 1:
-        return [description]
-    return [f"{description} — variant {i + 1} of {count}" for i in range(count)]
+#: kept as a name because tests and callers know it; the logic now lives in
+#: rewriter, which owns both the plain and the taste-informed expansion
+expand = plain_expand
 
 
 class Forge:
@@ -33,12 +29,14 @@ class Forge:
     and rebuilding one per brief would leak connections under any real traffic.
     """
 
-    def __init__(self, blobs: Blobs, settings: Settings, sink=None) -> None:
+    def __init__(self, blobs: Blobs, settings: Settings, sink=None, chat=None) -> None:
         self._blobs = blobs
         self._settings = settings
         self._sink = sink
         self._providers: dict[str, object] = {}
         self._caches: dict[str, B2StepCache] = {}
+        self._rewriter = TasteRewriter(blobs, chat=chat)
+        self._last_taste = Taste([], [])
 
     def provider_for(self, kind: Kind):
         if kind.key not in self._providers:
@@ -51,6 +49,11 @@ class Forge:
         if project not in self._caches:
             self._caches[project] = B2StepCache(self._blobs, prefix=f"{project}/cache")
         return self._caches[project]
+
+    @property
+    def taste_summary(self) -> str:
+        """What the last brief was informed by, for the interface to show."""
+        return self._last_taste.summary
 
     @property
     def savings(self) -> dict:
@@ -70,7 +73,12 @@ class Forge:
         provider_name = getattr(provider, "name", type(provider).__name__)
         out: list[dict] = []
 
-        for prompt in expand(description, count):
+        # what this project has kept before shapes what it asks for next
+        taste = Taste.from_entries(Library(self._blobs, project).staging(), kind=kind.key)
+        self._last_taste = taste
+        prompts = self._rewriter.prompts(project, kind.key, description, count, taste)
+
+        for prompt in prompts:
             pipeline = (
                 Pipeline("kiln")
                 .cache(cache)

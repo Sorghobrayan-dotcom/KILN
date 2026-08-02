@@ -134,6 +134,14 @@ button.quiet:hover:not(:disabled) { color: var(--ink); background: var(--bg2); b
 .status.err { color: var(--danger); }
 .muted { color: var(--muted); font-size: 0.845rem; }
 
+/* the library steering its own prompts — stated, never silent */
+.taught {
+  color: var(--blue);
+  border-left: 2px solid rgba(59,91,219,.3);
+  padding-left: 0.7rem;
+  margin-top: 0.3rem;
+}
+
 .row.spread {
   display: flex; align-items: center; justify-content: space-between;
   gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.2rem;

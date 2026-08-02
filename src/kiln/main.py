@@ -16,6 +16,7 @@ from kiln.config import settings
 from kiln.forge import b2_sink
 from kiln.kinds import available, roster
 from kiln.memory_backend import MemoryBackend
+from kiln.rewriter import nvidia_chat
 from kiln.service import Forge
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -45,12 +46,14 @@ def build() -> None:
         manifest_key_from_url = backend.key_from_url
         print("storage : memory (no B2 credentials) — state resets on restart", flush=True)
 
-    forge = Forge(blobs, st, sink=sink)
+    # the taste rewriter is optional: no key, no call, plain expansion
+    forge = Forge(blobs, st, sink=sink, chat=nvidia_chat(st.nvidia_api_key))
 
     STATE.blobs = blobs
     STATE.token = st.kiln_token
     STATE.generate = forge.generate
     STATE.savings = lambda: forge.savings
+    STATE.taste = lambda: forge.taste_summary
     STATE.roster = lambda: roster(st)
     STATE.manifest_key_from_url = manifest_key_from_url
 
