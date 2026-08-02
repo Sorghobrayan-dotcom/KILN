@@ -7,3 +7,4 @@ pillow
 httpx
 pytest
 genblaze-google
+genblaze-elevenlabs
