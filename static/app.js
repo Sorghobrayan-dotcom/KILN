@@ -154,30 +154,92 @@ async function decide(asset, action) {
   await refresh();
 }
 
-function showProvenance(asset) {
-  const dl = $("prov-body");
-  dl.replaceChildren();
-  const rows = {
-    prompt: asset.prompt,
-    kind: asset.kind,
-    modality: asset.modality,
-    provider: asset.provider,
-    model: asset.model,
-    "sha-256": asset.sha256,
-    score: asset.score,
-    verdict: asset.reasons,
-    state: asset.state,
-    version: asset.version ?? "not sealed yet",
-  };
-  for (const [key, value] of Object.entries(rows)) {
+function rows(target, pairs) {
+  for (const [key, value] of Object.entries(pairs)) {
     if (value == null || value === "") continue;
     const dt = document.createElement("dt");
     dt.textContent = key;
     const dd = document.createElement("dd");
     dd.textContent = String(value);
-    dl.append(dt, dd);
+    target.append(dt, dd);
   }
+}
+
+function section(title) {
+  const h = document.createElement("h3");
+  h.textContent = title;
+  return h;
+}
+
+async function showProvenance(asset) {
+  const body = $("prov-body");
+  body.replaceChildren();
   $("prov").showModal();
+
+  const kiln = document.createElement("dl");
+  rows(kiln, {
+    prompt: asset.prompt,
+    kind: asset.kind,
+    modality: asset.modality,
+    state: asset.state,
+    version: asset.version ?? "not sealed yet",
+    verdict: asset.reasons,
+  });
+  body.append(section("Kiln — what a human decided"), kiln);
+
+  const loading = document.createElement("p");
+  loading.className = "muted";
+  loading.textContent = "Reading the Genblaze manifest from storage…";
+  body.append(loading);
+
+  let payload;
+  try {
+    const res = await fetch(
+      `/api/projects/${encodeURIComponent(project())}/assets/${encodeURIComponent(asset.asset)}/provenance`,
+    );
+    payload = await res.json();
+  } catch (err) {
+    loading.textContent = `Could not read the manifest: ${err.message}`;
+    return;
+  }
+  loading.remove();
+
+  const gb = document.createElement("dl");
+  const manifest = payload.manifest;
+  const step = manifest?.run?.steps?.[0] ?? {};
+
+  rows(gb, {
+    provider: step.provider ?? asset.provider,
+    model: step.model ?? asset.model,
+    "sha-256": asset.sha256,
+    "canonical hash": manifest?.canonical_hash,
+    "schema version": manifest?.schema_version,
+    "run id": manifest?.run?.run_id,
+    started: step.started_at,
+    completed: step.completed_at,
+    "cost (usd)": step.cost_usd,
+    retries: step.retries,
+    "manifest uri": manifest?.manifest_uri ?? asset.manifest_uri,
+    signature: manifest?.signature ? "present" : undefined,
+  });
+  body.append(section("Genblaze — how it was made"), gb);
+
+  if (payload.manifest_note) {
+    const note = document.createElement("p");
+    note.className = "muted";
+    note.textContent = payload.manifest_note;
+    body.append(note);
+  }
+
+  if (manifest) {
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = "Raw manifest";
+    const pre = document.createElement("pre");
+    pre.textContent = JSON.stringify(manifest, null, 2);
+    details.append(summary, pre);
+    body.append(details);
+  }
 }
 
 $("refresh").addEventListener("click", refresh);

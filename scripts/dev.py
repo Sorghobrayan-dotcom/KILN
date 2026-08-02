@@ -28,6 +28,10 @@ has_b2 = bool(st.b2_key_id and st.b2_app_key and st.b2_bucket)
 if has_b2:
     blobs = B2Blobs(st.b2_bucket, st.b2_key_id, st.b2_app_key, st.b2_endpoint)
     sink = b2_sink(st)
+    # the sink writes manifests to B2 under an https url; strip the bucket
+    # prefix to get back the key the blobs layer reads
+    _root = f"{st.b2_endpoint.rstrip('/')}/{st.b2_bucket}/"
+    manifest_key_from_url = lambda u: u[len(_root):] if u and u.startswith(_root) else None
     print(f"storage : Backblaze B2 — {st.b2_bucket}")
 else:
     # No credentials: still run the real sink, so this path exercises the same
@@ -37,6 +41,7 @@ else:
     blobs = BackendBlobs(backend)
     sink = ObjectStorageSink(backend, prefix="kiln",
                              key_strategy=KeyStrategy.CONTENT_ADDRESSABLE)
+    manifest_key_from_url = backend.key_from_url
     print("storage : memory (no B2 keys) — assets served from /files/")
 
 forge = Forge(blobs, st, sink=sink)
@@ -46,6 +51,7 @@ STATE.token = st.kiln_token
 STATE.generate = forge.generate
 STATE.savings = lambda: forge.savings
 STATE.roster = lambda: roster(st)
+STATE.manifest_key_from_url = manifest_key_from_url
 
 print("kinds   : " + ", ".join(k.key for k in available(st)))
 print(f"token   : {st.kiln_token}")

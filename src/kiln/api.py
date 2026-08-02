@@ -30,6 +30,9 @@ class _State:
     token: str = "dev"
     savings: Callable[[], dict] | None = None
     roster: Callable[[], list[dict]] | None = None
+    #: turns a Genblaze manifest URL back into a bucket key, so the provenance
+    #: view can read the manifest the sink wrote
+    manifest_key_from_url: Callable[[str], str | None] | None = None
 
 
 STATE = _State()
@@ -83,6 +86,7 @@ def create_brief(brief: BriefIn, x_kiln_token: str | None = Header(default=None)
             prompt=r["prompt"], model=r["model"], provider=r["provider"],
             url=r["url"], sha256=r["sha256"],
             kind=r.get("kind"), modality=r.get("modality"),
+            manifest_uri=r.get("manifest_uri"),
             score=r.get("score"), reasons=r.get("reasons"),
         )
 
@@ -126,6 +130,47 @@ def reject(project: str, asset: str, x_kiln_token: str | None = Header(default=N
 def publish(project: str, x_kiln_token: str | None = Header(default=None)):
     _auth(x_kiln_token)
     return _library(project).publish()
+
+
+@app.get("/api/projects/{project}/assets/{asset}/provenance")
+def provenance(project: str, asset: str):
+    """The library entry, plus the Genblaze manifest that backs it.
+
+    Kiln's index says who approved an asset and what version it shipped in.
+    Genblaze's manifest says how it was made: provider, model, prompt, params,
+    timestamps, and a canonical hash over all of it. Neither is the whole
+    answer, so this hands back both, and says plainly when the manifest cannot
+    be read rather than pretending there is nothing to show.
+    """
+    import json
+
+    entry = next(
+        (a for a in _library(project).staging() if a["asset"] == asset),
+        None,
+    )
+    if entry is None:
+        raise HTTPException(status_code=404, detail=f"no asset {asset} in {project}")
+
+    manifest: dict | None = None
+    note: str | None = None
+    uri = entry.get("manifest_uri")
+
+    if not uri:
+        note = "this run predates manifest capture"
+    elif STATE.manifest_key_from_url is None:
+        note = "no storage backend configured to resolve the manifest"
+    else:
+        key = STATE.manifest_key_from_url(uri)
+        raw = STATE.blobs.get(key) if key else None
+        if raw is None:
+            note = f"manifest not readable at {uri}"
+        else:
+            try:
+                manifest = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                note = "manifest is present but not valid JSON"
+
+    return {"asset": entry, "manifest": manifest, "manifest_note": note}
 
 
 @app.get("/api/projects/{project}/versions/{version}/manifest")
