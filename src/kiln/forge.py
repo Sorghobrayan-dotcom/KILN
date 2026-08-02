@@ -53,32 +53,6 @@ class Forged:
     cached: bool
 
 
-def image_provider(st: Settings):
-    """Pick the generation backend from configuration.
-
-    Swapping providers is a Genblaze promise ("change one line"), and Kiln
-    keeps it a config change rather than a code change — which is not academic:
-    NVIDIA's free image endpoint answered 504 after 303 seconds on 2026-08-02,
-    and moving off it cost one environment variable.
-    """
-    if st.provider == "google":
-        from genblaze_google import GeminiImageProvider
-
-        return GeminiImageProvider(api_key=st.gemini_api_key)
-
-    if st.provider == "nvidia":
-        from genblaze_nvidia import NvidiaImageProvider
-
-        return NvidiaImageProvider(api_key=st.nvidia_api_key)
-
-    if st.provider == "gmi":
-        from genblaze_gmicloud import GMICloudImageProvider
-
-        return GMICloudImageProvider(api_key=st.gmi_api_key)
-
-    raise ValueError(f"unknown KILN_PROVIDER {st.provider!r}: expected google, nvidia or gmi")
-
-
 def b2_sink(st: Settings):
     """Assets and manifests land in B2 under a content-addressable layout, so
     identical bytes occupy one key no matter how many runs produced them."""

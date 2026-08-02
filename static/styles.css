@@ -108,9 +108,30 @@ dialog {
   max-width: min(90vw, 620px);
 }
 dialog::backdrop { background: rgba(0, 0, 0, 0.65); }
-dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 0.9rem; font-size: 0.85rem; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 0.9rem; font-size: 0.85rem; margin: 0 0 1rem; }
 dt { color: var(--dim); }
 dd { margin: 0; word-break: break-all; font-family: ui-monospace, monospace; font-size: 0.8rem; }
+dialog h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--hot);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+dialog details { margin-top: 0.5rem; }
+dialog summary { cursor: pointer; font-size: 0.85rem; color: var(--dim); }
+dialog pre {
+  background: #0b0b0e;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.6rem;
+  font-size: 0.72rem;
+  max-height: 40vh;
+  overflow: auto;
+  margin-top: 0.5rem;
+}
 
 @media (max-width: 520px) {
   .row { flex-direction: column; }

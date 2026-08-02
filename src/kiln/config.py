@@ -1,9 +1,10 @@
-"""Settings from the environment.
+"""Settings from the environment: credentials, and nothing else.
 
-Model ids are configuration, never code: they were verified against
-``NvidiaImageProvider.models_default().known()`` on 2026-08-01, but a provider
-can rename a slug any morning, and that must be a one-line env change rather
-than a deploy.
+Which provider serves which asset, and under which model id, lives in
+:mod:`kiln.kinds` — one place, keyed by the credential each needs. An earlier
+version also carried a ``KILN_PROVIDER`` switch here; it survived the move to
+kinds as dead configuration, which is worse than no configuration, because it
+looks like it does something.
 """
 import os
 from dataclasses import dataclass
@@ -20,11 +21,6 @@ class Settings:
     gmi_api_key: str
     elevenlabs_api_key: str
     kiln_token: str
-    provider: str
-    image_model: str
-    fallback_models: list[str]
-    vision_model: str
-    tts_model: str
     eval_threshold: int
     max_iterations: int
 
@@ -40,18 +36,6 @@ def settings() -> Settings:
         gmi_api_key=os.getenv("GMI_API_KEY", ""),
         elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY", ""),
         kiln_token=os.getenv("KILN_TOKEN", "dev"),
-        # google by default: NVIDIA's free image endpoint returned 504 after
-        # 303s on 2026-08-02 — their gateway gave up, not our network.
-        provider=os.getenv("KILN_PROVIDER", "google"),
-        image_model=os.getenv("KILN_IMAGE_MODEL", "gemini-2.5-flash-image"),
-        # a slug going dark mid-demo degrades instead of failing
-        fallback_models=[
-            m.strip()
-            for m in os.getenv("KILN_FALLBACK_MODELS", "gemini-3.1-flash-image").split(",")
-            if m.strip()
-        ],
-        vision_model=os.getenv("KILN_VISION_MODEL", "meta/llama-3.2-90b-vision-instruct"),
-        tts_model=os.getenv("KILN_TTS_MODEL", "nvidia/magpie-tts-multilingual"),
         eval_threshold=int(os.getenv("KILN_EVAL_THRESHOLD", "7")),
         max_iterations=int(os.getenv("KILN_MAX_ITERATIONS", "2")),
     )
