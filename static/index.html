@@ -18,15 +18,17 @@
   <form id="brief-form">
     <div class="row">
       <label>Project <input id="project" value="providence" required></label>
+      <label>Asset kind <select id="kind"></select></label>
       <label>How many <input id="count" type="number" min="1" max="12" value="3"></label>
       <label>Token <input id="token" type="password" value="kiln-demo-2026"></label>
     </div>
     <label>Brief
-      <textarea id="description" rows="2" required>NPC portrait, monochrome engraving, high contrast woodcut</textarea>
+      <textarea id="description" rows="2" required>It is written. You will not pass this gate tonight.</textarea>
     </label>
     <button id="go">Generate</button>
   </form>
   <p id="status" class="status"></p>
+  <p id="savings" class="muted"></p>
 </section>
 
 <section class="panel">

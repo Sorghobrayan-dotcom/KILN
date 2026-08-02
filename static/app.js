@@ -11,6 +11,33 @@ function say(text, kind = "") {
   el.className = `status ${kind}`;
 }
 
+function showSavings(savings) {
+  if (!savings || savings.generations_avoided === 0) {
+    $("savings").textContent = "";
+    return;
+  }
+  const { generations_avoided: avoided, generations_paid_for: paid, hit_rate: rate } = savings;
+  $("savings").textContent =
+    `This library has avoided ${avoided} generation(s) — ` +
+    `${paid} paid for, ${Math.round(rate * 100)}% served from the bucket.`;
+}
+
+async function loadKinds() {
+  const { kinds } = await (await fetch("/api/kinds")).json();
+  const select = $("kind");
+  select.replaceChildren();
+  for (const k of kinds) {
+    const option = document.createElement("option");
+    option.value = k.key;
+    option.textContent = k.enabled ? k.label : `${k.label} — unavailable`;
+    option.disabled = !k.enabled;
+    option.title = k.hint;
+    select.append(option);
+  }
+  const firstEnabled = kinds.find((k) => k.enabled);
+  if (firstEnabled) select.value = firstEnabled.key;
+}
+
 $("brief-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   $("go").disabled = true;
@@ -23,14 +50,17 @@ $("brief-form").addEventListener("submit", async (event) => {
         project: project(),
         description: $("description").value,
         count: Number($("count").value),
+        kind: $("kind").value,
       }),
     });
     const body = await res.json();
     if (!res.ok) {
-      say(body.detail ? `Error: ${JSON.stringify(body.detail)}` : `Error ${res.status}`, "err");
+      const detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+      say(`Error: ${detail ?? res.status}`, "err");
       return;
     }
     say(body.summary, body.served_from_cache > 0 ? "hit" : "");
+    showSavings(body.savings);
     await refresh();
   } catch (err) {
     say(`Error: ${err.message}`, "err");
@@ -51,17 +81,15 @@ async function refresh() {
   for (const asset of assets) {
     const card = document.createElement("div");
     card.className = `card state-${asset.state}`;
-
-    const img = document.createElement("img");
-    img.src = asset.url;
-    img.alt = asset.prompt ?? "";
-    img.loading = "lazy";
-    card.append(img);
+    card.append(preview(asset));
 
     const meta = document.createElement("div");
     meta.className = "meta";
-    const score = asset.score != null ? ` · ${asset.score}/10` : "";
-    meta.textContent = `${asset.state}${score}`;
+    const bits = [asset.state];
+    if (asset.kind) bits.push(asset.kind);
+    if (asset.score != null) bits.push(`${asset.score}/10`);
+    meta.textContent = bits.join(" · ");
+    meta.title = asset.prompt ?? "";
     card.append(meta);
 
     const acts = document.createElement("div");
@@ -74,6 +102,36 @@ async function refresh() {
     card.append(acts);
     grid.append(card);
   }
+}
+
+function preview(asset) {
+  // an asset that failed has no bytes to show; say so rather than render a
+  // broken box the user has to guess at
+  if (!asset.url) {
+    const dead = document.createElement("div");
+    dead.className = "dead";
+    dead.textContent = asset.reasons ?? "no asset";
+    return dead;
+  }
+  if (asset.modality === "audio") {
+    const audio = document.createElement("audio");
+    audio.src = asset.url;
+    audio.controls = true;
+    audio.preload = "none";
+    return audio;
+  }
+  if (asset.modality === "video") {
+    const video = document.createElement("video");
+    video.src = asset.url;
+    video.controls = true;
+    video.preload = "metadata";
+    return video;
+  }
+  const img = document.createElement("img");
+  img.src = asset.url;
+  img.alt = asset.prompt ?? "";
+  img.loading = "lazy";
+  return img;
 }
 
 function button(label, onClick) {
@@ -101,6 +159,8 @@ function showProvenance(asset) {
   dl.replaceChildren();
   const rows = {
     prompt: asset.prompt,
+    kind: asset.kind,
+    modality: asset.modality,
     provider: asset.provider,
     model: asset.model,
     "sha-256": asset.sha256,
@@ -139,4 +199,4 @@ $("publish").addEventListener("click", async () => {
   await refresh();
 });
 
-refresh();
+loadKinds().then(refresh);

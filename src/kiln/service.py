@@ -5,11 +5,13 @@ forge.py so the Genblaze layer stays ignorant of HTTP.
 """
 from typing import Callable
 
-from genblaze_core import LoggingTracer, Modality, Pipeline
+from genblaze_core import LoggingTracer, Pipeline
 
 from kiln.blobs import Blobs
-from kiln.cache import B2StepCache, was_cache_hit
+from kiln.cache import B2StepCache
+from kiln.config import Settings
 from kiln.forge import ForgeError, harvest
+from kiln.kinds import Kind, resolve
 
 
 def expand(description: str, count: int) -> list[str]:
@@ -24,20 +26,48 @@ def expand(description: str, count: int) -> list[str]:
     return [f"{description} — variant {i + 1} of {count}" for i in range(count)]
 
 
-def make_generator(
-    blobs: Blobs,
-    provider,
-    model: str,
-    *,
-    sink=None,
-    fallback_models: list[str] | None = None,
-    evaluator: Callable[[bytes, str], tuple[int, str]] | None = None,
-) -> Callable[[str, str, int], list[dict]]:
-    """Build the callable the API holds. One cache per project keeps the
-    namespaces apart in the bucket without any extra bookkeeping."""
+class Forge:
+    """Holds the providers, the cache and the sink for a deployment.
 
-    def generate(project: str, description: str, count: int) -> list[dict]:
-        cache = B2StepCache(blobs, prefix=f"{project}/cache")
+    Providers are built once and reused: each construction opens an HTTP client,
+    and rebuilding one per brief would leak connections under any real traffic.
+    """
+
+    def __init__(self, blobs: Blobs, settings: Settings, sink=None) -> None:
+        self._blobs = blobs
+        self._settings = settings
+        self._sink = sink
+        self._providers: dict[str, object] = {}
+        self._caches: dict[str, B2StepCache] = {}
+
+    def provider_for(self, kind: Kind):
+        if kind.key not in self._providers:
+            self._providers[kind.key] = kind.build(self._settings)
+        return self._providers[kind.key]
+
+    def cache_for(self, project: str) -> B2StepCache:
+        """One cache namespace per project, so two games never collide — and so
+        the bucket stays readable to a human browsing it."""
+        if project not in self._caches:
+            self._caches[project] = B2StepCache(self._blobs, prefix=f"{project}/cache")
+        return self._caches[project]
+
+    @property
+    def savings(self) -> dict:
+        """Generations the cache avoided, across every project this process saw."""
+        hits = sum(c.hits for c in self._caches.values())
+        misses = sum(c.misses for c in self._caches.values())
+        return {
+            "generations_avoided": hits,
+            "generations_paid_for": misses,
+            "hit_rate": round(hits / (hits + misses), 3) if hits + misses else 0.0,
+        }
+
+    def generate(self, project: str, description: str, count: int, kind_key: str) -> list[dict]:
+        kind = resolve(self._settings, kind_key)
+        provider = self.provider_for(kind)
+        cache = self.cache_for(project)
+        provider_name = getattr(provider, "name", type(provider).__name__)
         out: list[dict] = []
 
         for prompt in expand(description, count):
@@ -45,23 +75,20 @@ def make_generator(
                 Pipeline("kiln")
                 .cache(cache)
                 .tracer(LoggingTracer())
-                .step(
-                    provider,
-                    model=model,
-                    prompt=prompt,
-                    modality=Modality.IMAGE,
-                    **({"fallback_models": fallback_models} if fallback_models else {}),
-                )
+                .step(provider, model=kind.model, prompt=prompt, modality=kind.modality)
             )
-            result = pipeline.run(**({"sink": sink} if sink else {}), raise_on_failure=False)
+            result = pipeline.run(
+                **({"sink": self._sink} if self._sink else {}), raise_on_failure=False
+            )
 
             try:
-                forged = harvest(result, prompt, getattr(provider, "name", "provider"))
+                forged = harvest(result, prompt, provider_name)
             except ForgeError as exc:
                 # one bad prompt must not sink the batch: the others still land
                 out.append({
-                    "asset_id": f"failed:{abs(hash(prompt))}", "prompt": prompt,
-                    "model": model, "provider": getattr(provider, "name", "provider"),
+                    "asset_id": f"failed:{kind.key}:{abs(hash(prompt))}",
+                    "prompt": prompt, "model": kind.model, "provider": provider_name,
+                    "kind": kind.key, "modality": str(kind.modality),
                     "url": "", "sha256": "", "cached": False,
                     "score": None, "reasons": f"generation failed: {exc.reason}",
                     "failed": True,
@@ -71,23 +98,11 @@ def make_generator(
             out.append({
                 "asset_id": forged.asset_id, "prompt": forged.prompt,
                 "model": forged.model, "provider": forged.provider,
+                "kind": kind.key, "modality": str(kind.modality),
                 "url": forged.url, "sha256": forged.sha256,
                 "cached": forged.cached,
-                "score": 9, "reasons": "accepted",
                 "manifest_uri": forged.manifest_uri,
+                "score": None, "reasons": None,
             })
 
         return out
-
-    return generate
-
-
-def cache_stats_for(blobs: Blobs, project: str) -> Callable[[], dict]:
-    def stats() -> dict:
-        keys = blobs.keys(f"{project}/cache/")
-        return {"project": project, "entries": len(keys)}
-
-    return stats
-
-
-__all__ = ["expand", "make_generator", "cache_stats_for", "was_cache_hit"]

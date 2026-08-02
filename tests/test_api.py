@@ -7,14 +7,24 @@ from kiln.blobs import MemoryBlobs
 AUTH = {"X-Kiln-Token": "t"}
 
 
-def fake_generate(project, description, count):
+SAVINGS = {"generations_avoided": 3, "generations_paid_for": 1, "hit_rate": 0.75}
+ROSTER = [
+    {"key": "voice", "label": "NPC voice line", "enabled": True, "hint": "ok"},
+    {"key": "video", "label": "Establishing shot", "enabled": False, "hint": "set GMI_API_KEY"},
+]
+
+
+def fake_generate(project, description, count, kind):
     """Two fresh assets, then everything is a cache hit — like a warm bucket."""
+    if kind == "video":
+        raise KeyError("kind 'video' needs GMI_API_KEY")
     out = []
     for i in range(count):
         out.append({
             "asset_id": f"sha{i}", "prompt": f"{description} #{i}",
-            "model": "kiln-local-1", "provider": "kiln-local",
-            "url": f"/files/demo/{i}.png", "sha256": f"sha{i}",
+            "model": "eleven_flash_v2_5", "provider": "elevenlabs-tts",
+            "kind": kind, "modality": "audio",
+            "url": f"/files/demo/{i}.mp3", "sha256": f"sha{i}",
             "score": 9, "reasons": "on style", "cached": i >= 2,
         })
     return out
@@ -25,24 +35,43 @@ def client():
     api.STATE.blobs = MemoryBlobs()
     api.STATE.generate = fake_generate
     api.STATE.token = "t"
-    api.STATE.cache_stats = lambda: {"hits": 3, "misses": 1}
+    api.STATE.savings = lambda: SAVINGS
+    api.STATE.roster = lambda: ROSTER
     return TestClient(api.app)
 
 
-def test_health_reports_cache_stats(client):
+def test_health_reports_savings_and_kinds(client):
     body = client.get("/health").json()
     assert body["ok"] is True
-    assert body["cache"] == {"hits": 3, "misses": 1}
+    assert body["savings"] == SAVINGS
+    assert body["kinds"] == ROSTER
+
+
+def test_kinds_endpoint_says_what_is_missing(client):
+    kinds = {k["key"]: k for k in client.get("/api/kinds").json()["kinds"]}
+    assert kinds["voice"]["enabled"] is True
+    assert kinds["video"]["enabled"] is False
+    assert "GMI_API_KEY" in kinds["video"]["hint"]
+
+
+def test_unconfigured_kind_is_a_400_with_the_reason(client):
+    r = client.post("/api/briefs",
+                    json={"project": "p", "description": "x", "count": 1, "kind": "video"},
+                    headers=AUTH)
+    assert r.status_code == 400
+    assert "GMI_API_KEY" in r.json()["detail"]
 
 
 def test_full_journey_brief_to_sealed_manifest(client):
     r = client.post("/api/briefs",
-                    json={"project": "providence", "description": "npc portrait", "count": 3},
+                    json={"project": "providence", "description": "npc line",
+                          "count": 3, "kind": "voice"},
                     headers=AUTH)
     assert r.status_code == 200
     body = r.json()
     assert body["served_from_cache"] == 1
     assert "1 served from B2" in body["summary"]
+    assert body["savings"] == SAVINGS
 
     staged = client.get("/api/projects/providence/staging").json()["assets"]
     assert len(staged) == 3
