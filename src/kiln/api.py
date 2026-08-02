@@ -19,7 +19,7 @@ from kiln.library import Library
 class Generator(Protocol):
     """Produces assets for a brief. The API never learns which provider ran."""
 
-    def __call__(self, project: str, description: str, count: int) -> list[dict]: ...
+    def __call__(self, project: str, description: str, count: int, kind: str) -> list[dict]: ...
 
 
 class _State:
@@ -28,7 +28,8 @@ class _State:
     blobs: Blobs
     generate: Generator
     token: str = "dev"
-    cache_stats: Callable[[], dict] | None = None
+    savings: Callable[[], dict] | None = None
+    roster: Callable[[], list[dict]] | None = None
 
 
 STATE = _State()
@@ -48,17 +49,32 @@ class BriefIn(BaseModel):
     project: str = Field(min_length=1)
     description: str = Field(min_length=1)
     count: int = Field(default=4, ge=1, le=12)
+    kind: str = Field(default="sketch", min_length=1)
 
 
 @app.get("/health")
 def health() -> dict[str, Any]:
-    return {"ok": True, "cache": STATE.cache_stats() if STATE.cache_stats else None}
+    return {
+        "ok": True,
+        "savings": STATE.savings() if STATE.savings else None,
+        "kinds": STATE.roster() if STATE.roster else [],
+    }
+
+
+@app.get("/api/kinds")
+def kinds() -> dict[str, Any]:
+    """What this deployment can make, and what each missing one would need."""
+    return {"kinds": STATE.roster() if STATE.roster else []}
 
 
 @app.post("/api/briefs")
 def create_brief(brief: BriefIn, x_kiln_token: str | None = Header(default=None)):
     _auth(x_kiln_token)
-    results = STATE.generate(brief.project, brief.description, brief.count)
+    try:
+        results = STATE.generate(brief.project, brief.description, brief.count, brief.kind)
+    except KeyError as exc:
+        # an unconfigured kind is the operator's problem, not a server fault
+        raise HTTPException(status_code=400, detail=str(exc).strip("'")) from exc
 
     library = _library(brief.project)
     for r in results:
@@ -66,16 +82,24 @@ def create_brief(brief: BriefIn, x_kiln_token: str | None = Header(default=None)
             r["asset_id"],
             prompt=r["prompt"], model=r["model"], provider=r["provider"],
             url=r["url"], sha256=r["sha256"],
+            kind=r.get("kind"), modality=r.get("modality"),
             score=r.get("score"), reasons=r.get("reasons"),
         )
 
     served = sum(1 for r in results if r.get("cached"))
+    failed = sum(1 for r in results if r.get("failed"))
+    summary = (f"{len(results)} asset(s) — {served} served from B2, "
+               f"{len(results) - served - failed} generated")
+    if failed:
+        summary += f", {failed} failed"
+
     return {
         "results": results,
         "served_from_cache": served,
+        "failed": failed,
+        "savings": STATE.savings() if STATE.savings else None,
         # the sentence the whole demo turns on
-        "summary": f"{len(results)} asset(s) — {served} served from B2, "
-                   f"{len(results) - served} generated.",
+        "summary": summary + ".",
     }
 
 

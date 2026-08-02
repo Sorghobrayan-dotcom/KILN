@@ -1,8 +1,9 @@
-"""Run Kiln locally with no keys at all.
+"""Run Kiln locally.
 
-Uses the offline provider and in-memory storage, so the whole product — brief,
-cache, staging, approval, sealed version, manifest — is exercisable by anyone
-who clones the repository.
+Uses whatever the environment provides: real B2 and real providers when the
+keys are there, memory and the offline sketch provider when they are not. The
+app is therefore never dead on arrival — a fresh clone with an empty .env still
+demonstrates the whole journey.
 """
 import _env
 
@@ -11,36 +12,33 @@ _env.load()
 import uvicorn  # noqa: E402
 
 from kiln.api import STATE, app, mount_static  # noqa: E402
-from kiln.blobs import MemoryBlobs  # noqa: E402
-from kiln.local_provider import LocalImageProvider, render  # noqa: E402
-from kiln.service import cache_stats_for, make_generator  # noqa: E402
+from kiln.blobs import B2Blobs, MemoryBlobs  # noqa: E402
+from kiln.config import settings  # noqa: E402
+from kiln.forge import b2_sink  # noqa: E402
+from kiln.kinds import available, roster  # noqa: E402
+from kiln.service import Forge  # noqa: E402
 
-blobs = MemoryBlobs()
-provider = LocalImageProvider()
+st = settings()
+has_b2 = bool(st.b2_key_id and st.b2_app_key and st.b2_bucket)
+
+if has_b2:
+    blobs = B2Blobs(st.b2_bucket, st.b2_key_id, st.b2_app_key, st.b2_endpoint)
+    sink = b2_sink(st)
+    print(f"storage : Backblaze B2 — {st.b2_bucket}")
+else:
+    blobs, sink = MemoryBlobs(), None
+    print("storage : memory (no B2 keys found)")
+
+forge = Forge(blobs, st, sink=sink)
 
 STATE.blobs = blobs
-STATE.token = "kiln-demo-2026"
-STATE.generate = make_generator(blobs, provider, "kiln-local-1")
-STATE.cache_stats = cache_stats_for(blobs, "providence")
+STATE.token = st.kiln_token
+STATE.generate = forge.generate
+STATE.savings = lambda: forge.savings
+STATE.roster = lambda: roster(st)
 
-
-# the offline provider writes file:// urls; serve those bytes through /files so
-# the browser can show them without a bucket
-_original = STATE.generate
-
-
-def generate(project: str, description: str, count: int) -> list[dict]:
-    results = _original(project, description, count)
-    for r in results:
-        if r["url"].startswith("file://") and r["sha256"]:
-            key = f"{project}/staging/{r['sha256']}.png"
-            if blobs.get(key) is None:
-                blobs.put(key, render(r["prompt"]), "image/png")
-            r["url"] = f"/files/{key}"
-    return results
-
-
-STATE.generate = generate
+print("kinds   : " + ", ".join(k.key for k in available(st)))
+print(f"token   : {st.kiln_token}")
 
 # absolute, so the server can be launched from anywhere
 mount_static(str(_env.ROOT / "static"))

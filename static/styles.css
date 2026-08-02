@@ -79,7 +79,20 @@ button.ghost { background: transparent; color: var(--ink); border: 1px solid var
   overflow: hidden;
   background: #101014;
 }
-.card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #000; }
+.card img,
+.card video { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #000; }
+.card audio { width: 100%; display: block; padding: 0.5rem; }
+.card .dead {
+  padding: 1.1rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--no);
+  min-height: 5rem;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+select { font: inherit; color: var(--ink); background: #101014; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem 0.6rem; }
+select option:disabled { color: var(--dim); }
 .card .meta { padding: 0.45rem 0.55rem; font-size: 0.78rem; color: var(--dim); }
 .card .acts { display: flex; gap: 0.3rem; padding: 0 0.55rem 0.55rem; }
 .card .acts button { flex: 1; padding: 0.3rem; font-size: 0.8rem; }
