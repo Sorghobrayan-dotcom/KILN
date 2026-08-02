@@ -18,6 +18,7 @@ class Settings:
     nvidia_api_key: str
     gemini_api_key: str
     gmi_api_key: str
+    elevenlabs_api_key: str
     kiln_token: str
     provider: str
     image_model: str
@@ -37,6 +38,7 @@ def settings() -> Settings:
         nvidia_api_key=os.getenv("NVIDIA_API_KEY", ""),
         gemini_api_key=os.getenv("GEMINI_API_KEY", ""),
         gmi_api_key=os.getenv("GMI_API_KEY", ""),
+        elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY", ""),
         kiln_token=os.getenv("KILN_TOKEN", "dev"),
         # google by default: NVIDIA's free image endpoint returned 504 after
         # 303s on 2026-08-02 — their gateway gave up, not our network.
