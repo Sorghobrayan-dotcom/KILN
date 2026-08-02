@@ -16,8 +16,10 @@ class Settings:
     b2_bucket: str
     b2_endpoint: str
     nvidia_api_key: str
+    gemini_api_key: str
     gmi_api_key: str
     kiln_token: str
+    provider: str
     image_model: str
     fallback_models: list[str]
     vision_model: str
@@ -33,16 +35,17 @@ def settings() -> Settings:
         b2_bucket=os.getenv("B2_BUCKET", "kiln-assets"),
         b2_endpoint=os.getenv("B2_ENDPOINT", "https://s3.us-west-004.backblazeb2.com"),
         nvidia_api_key=os.getenv("NVIDIA_API_KEY", ""),
+        gemini_api_key=os.getenv("GEMINI_API_KEY", ""),
         gmi_api_key=os.getenv("GMI_API_KEY", ""),
         kiln_token=os.getenv("KILN_TOKEN", "dev"),
-        image_model=os.getenv("KILN_IMAGE_MODEL", "black-forest-labs/flux.1-schnell"),
+        # google by default: NVIDIA's free image endpoint returned 504 after
+        # 303s on 2026-08-02 — their gateway gave up, not our network.
+        provider=os.getenv("KILN_PROVIDER", "google"),
+        image_model=os.getenv("KILN_IMAGE_MODEL", "gemini-2.5-flash-image"),
         # a slug going dark mid-demo degrades instead of failing
         fallback_models=[
             m.strip()
-            for m in os.getenv(
-                "KILN_FALLBACK_MODELS",
-                "stabilityai/stable-diffusion-3-5-large-turbo,stabilityai/stable-diffusion-xl",
-            ).split(",")
+            for m in os.getenv("KILN_FALLBACK_MODELS", "gemini-3.1-flash-image").split(",")
             if m.strip()
         ],
         vision_model=os.getenv("KILN_VISION_MODEL", "meta/llama-3.2-90b-vision-instruct"),
