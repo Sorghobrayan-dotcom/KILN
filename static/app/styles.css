@@ -91,6 +91,15 @@ button.ghost { background: transparent; color: var(--ink); border: 1px solid var
   place-items: center;
   text-align: center;
 }
+.back {
+  display: inline-block;
+  color: var(--dim);
+  text-decoration: none;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.6rem;
+}
+.back:hover { color: var(--hot); }
 select { font: inherit; color: var(--ink); background: #101014; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem 0.6rem; }
 select option:disabled { color: var(--dim); }
 .card .meta { padding: 0.45rem 0.55rem; font-size: 0.78rem; color: var(--dim); }
