@@ -20,6 +20,13 @@ from kiln.blobs import Blobs
 
 logger = logging.getLogger(__name__)
 
+#: Stamped into ``Step.metadata`` when this cache served the step.
+HIT_MARKER = "kiln_cache_hit"
+
+
+def was_cache_hit(step: Step) -> bool:
+    return bool((step.metadata or {}).get(HIT_MARKER))
+
 
 class B2StepCache:
     """Duck-compatible with ``genblaze_core.pipeline.cache.StepCache``."""
@@ -28,6 +35,8 @@ class B2StepCache:
         self._blobs = blobs
         self._prefix = prefix.rstrip("/")
         self._corruption_count = 0
+        self._hits = 0
+        self._misses = 0
 
     @property
     def corruption_count(self) -> int:
@@ -35,20 +44,36 @@ class B2StepCache:
         Step schema change stranded old entries, not that B2 is failing."""
         return self._corruption_count
 
+    @property
+    def hits(self) -> int:
+        return self._hits
+
+    @property
+    def misses(self) -> int:
+        return self._misses
+
     def _key(self, step: Step, tenant_id: str | None) -> str:
         return f"{self._prefix}/{step_cache_key(step, tenant_id)}.json"
 
     def get(self, step: Step, tenant_id: str | None = None) -> Step | None:
         raw = self._blobs.get(self._key(step, tenant_id))
         if raw is None:
+            self._misses += 1
             return None
         try:
-            return Step.model_validate(json.loads(raw.decode("utf-8")))
+            hit = Step.model_validate(json.loads(raw.decode("utf-8")))
         except Exception as exc:
             # a corrupt entry must read as a miss, never as an outage
             self._corruption_count += 1
             logger.warning("Cache entry unreadable (treating as miss): %s", exc)
             return None
+
+        # Genblaze returns a cached Step verbatim: no flag, no tracer event, so a
+        # hit is invisible to whoever called run(). Kiln stamps it here, because
+        # "this cost nothing" is a thing the user is entitled to be told.
+        self._hits += 1
+        hit.metadata = {**(hit.metadata or {}), HIT_MARKER: True}
+        return hit
 
     def put(self, step: Step, result: Step, tenant_id: str | None = None) -> None:
         self._blobs.put(

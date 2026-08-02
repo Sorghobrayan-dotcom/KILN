@@ -12,7 +12,7 @@ and someone has to decide which of those assets ships.
 import re
 from dataclasses import dataclass
 
-from kiln.cache import B2StepCache
+from kiln.cache import B2StepCache, was_cache_hit
 from kiln.config import Settings
 
 # https://s3.eu-central-003.backblazeb2.com -> eu-central-003
@@ -141,7 +141,7 @@ def harvest(result, prompt: str, provider_name: str) -> Forged:
         provider=provider_name,
         model=step.model,
         manifest_uri=getattr(result.manifest, "manifest_uri", None),
-        cached=bool(getattr(step, "cached", False)),
+        cached=was_cache_hit(step),
     )
 
 
