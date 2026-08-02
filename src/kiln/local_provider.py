@@ -19,6 +19,8 @@ exactly what a provenance system should be tested against.
 import hashlib
 import io
 import mimetypes
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -65,18 +67,33 @@ class LocalImageProvider(SyncProvider):
 
     def __init__(self, output_dir: str | Path | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self._output_dir = Path(output_dir or Path.cwd() / ".cache" / "kiln-local")
-        self._output_dir.mkdir(parents=True, exist_ok=True)
+        # None means the system temp dir: Genblaze's sink will only upload
+        # files from temp or from a declared output_dir.
+        self._output_dir = Path(output_dir) if output_dir else None
+        if self._output_dir:
+            self._output_dir.mkdir(parents=True, exist_ok=True)
 
     def generate(self, step: Step, config: RunnableConfig | None = None) -> Step:
         data = render(step.prompt or "")
         digest = hashlib.sha256(data).hexdigest()
         ext = mimetypes.guess_extension("image/png") or ".png"
-        path = self._output_dir / f"{digest}{ext}"
+
+        if self._output_dir:
+            path = self._output_dir / f"{digest}{ext}"
+        else:
+            handle, name = tempfile.mkstemp(suffix=ext)
+            os.close(handle)
+            path = Path(name)
         path.write_bytes(data)
+
         # the hash is set here because we hold the bytes: a run without a sink
         # would otherwise carry no content identity at all
         step.assets.append(
-            Asset(url=path.as_uri(), media_type="image/png", sha256=digest)
+            Asset(
+                url=path.resolve().as_uri(),
+                media_type="image/png",
+                sha256=digest,
+                size_bytes=len(data),
+            )
         )
         return step

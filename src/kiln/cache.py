@@ -28,6 +28,15 @@ def was_cache_hit(step: Step) -> bool:
     return bool((step.metadata or {}).get(HIT_MARKER))
 
 
+def _points_at_local_files(step: Step) -> bool:
+    """True if any asset still lives on the machine that made it.
+
+    Durable assets carry an http(s) URL written by the sink. A file:// URL means
+    the upload never happened, so the bytes are on somebody else's disk.
+    """
+    return any((a.url or "").startswith("file://") for a in (step.assets or []))
+
+
 class B2StepCache:
     """Duck-compatible with ``genblaze_core.pipeline.cache.StepCache``."""
 
@@ -37,6 +46,7 @@ class B2StepCache:
         self._corruption_count = 0
         self._hits = 0
         self._misses = 0
+        self._stale = 0
 
     @property
     def corruption_count(self) -> int:
@@ -52,6 +62,11 @@ class B2StepCache:
     def misses(self) -> int:
         return self._misses
 
+    @property
+    def stale(self) -> int:
+        """Entries discarded for pointing at a local path — a failed upload."""
+        return self._stale
+
     def _key(self, step: Step, tenant_id: str | None) -> str:
         return f"{self._prefix}/{step_cache_key(step, tenant_id)}.json"
 
@@ -66,6 +81,15 @@ class B2StepCache:
             # a corrupt entry must read as a miss, never as an outage
             self._corruption_count += 1
             logger.warning("Cache entry unreadable (treating as miss): %s", exc)
+            return None
+
+        if _points_at_local_files(hit):
+            # A step is cached before its assets are transferred, so a run whose
+            # upload failed leaves an entry pointing at a temp file. That file is
+            # gone by the next process, and replaying it breaks the prompt
+            # forever. Treat it as a miss and let the run happen again.
+            self._stale += 1
+            logger.warning("Cache entry references a local path; regenerating")
             return None
 
         # Genblaze returns a cached Step verbatim: no flag, no tracer event, so a
