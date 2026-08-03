@@ -80,4 +80,4 @@ print(f"  warm pass : {warm:.2f}s   cache hits: {hits}/{len(PROMPTS)}")
 print(f"  blobs in store: {len(blobs.keys())}")
 assert hits == len(PROMPTS), f"expected every step cached, got {hits}"
 assert len(manifest["assets"]) == 2, "only approved assets may ship"
-print("\n  OK — full pipeline, zero network, zero cost.")
+print("\n  OK. Full pipeline, zero network, zero cost.")

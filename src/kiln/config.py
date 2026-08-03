@@ -1,7 +1,7 @@
 """Settings from the environment: credentials, and nothing else.
 
 Which provider serves which asset, and under which model id, lives in
-:mod:`kiln.kinds` — one place, keyed by the credential each needs. An earlier
+:mod:`kiln.kinds`, keyed by the credential each one needs. An earlier
 version also carried a ``KILN_PROVIDER`` switch here; it survived the move to
 kinds as dead configuration, which is worse than no configuration, because it
 looks like it does something.

@@ -1,4 +1,4 @@
-"""Real Pollinations image generation, through Genblaze, into B2 — no credential.
+"""Real Pollinations image generation, through Genblaze, into B2, no credential.
 
 Twice, to show the cache answering the second time.
 """

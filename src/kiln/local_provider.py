@@ -2,8 +2,8 @@
 
 Three reasons this exists, and none of them is a mock:
 
-1. A judge can clone the repository and run the whole pipeline — cache, staging,
-   approval, sealed version, manifest — without holding a single API key.
+1. A judge can clone the repository and run the whole pipeline, cache and
+   staging and approval and sealed version and manifest, without an API key.
 2. Kiln's own tests exercise the real Genblaze machinery rather than a stand-in
    for it: a real Pipeline, a real Step, a real manifest.
 3. Every hosted image tier we tried on 2026-08-02 was gated (NVIDIA answered 504
@@ -11,7 +11,7 @@ Three reasons this exists, and none of them is a mock:
    models). A pipeline whose demo depends on somebody else's free tier is a
    pipeline that cannot be demonstrated.
 
-What it draws is deterministic art derived from the prompt's hash — bands and a
+What it draws is deterministic art derived from the prompt's hash: bands and a
 disc whose colours and geometry come from the text. It is not pretending to be a
 diffusion model; it is a generator whose output is reproducible, which is
 exactly what a provenance system should be tested against.

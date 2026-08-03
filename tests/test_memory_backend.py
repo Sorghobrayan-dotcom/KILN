@@ -74,7 +74,7 @@ def test_list_returns_populated_entries_and_paginates():
 def test_backend_blobs_puts_state_and_assets_in_one_place():
     """Without this, a credential-free deployment splits its bytes: Genblaze
     writes assets to the backend, Kiln writes the index elsewhere, and /files/
-    can only serve one of them — so the gallery shows dead links."""
+    can only serve one of them, so the gallery fills with dead links."""
     backend = MemoryBackend(public_url_base="/files")
     blobs = BackendBlobs(backend)
 

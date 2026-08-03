@@ -87,8 +87,8 @@ def test_a_transport_failure_is_reported_as_unreachable(tmp_path):
 
 
 def test_without_an_output_dir_the_file_lands_in_temp():
-    """Genblaze's sink refuses to upload a file from an arbitrary path — it must
-    sit under temp or a declared output_dir. Defaulting elsewhere silently
+    """Genblaze's sink refuses to upload a file from an arbitrary path. It has
+    to sit under temp or a declared output_dir. Defaulting elsewhere silently
     breaks every transfer, which is how this was found."""
     import tempfile
     from urllib.parse import unquote, urlparse

@@ -34,7 +34,7 @@ def build() -> None:
         def manifest_key_from_url(url: str) -> str | None:
             return url[len(root):] if url and url.startswith(root) else None
 
-        print(f"storage : Backblaze B2 — {st.b2_bucket}", flush=True)
+        print(f"storage : Backblaze B2, bucket {st.b2_bucket}", flush=True)
     else:
         from genblaze_core import KeyStrategy
         from genblaze_core.storage.sink import ObjectStorageSink
@@ -44,7 +44,7 @@ def build() -> None:
         sink = ObjectStorageSink(backend, prefix="kiln",
                                  key_strategy=KeyStrategy.CONTENT_ADDRESSABLE)
         manifest_key_from_url = backend.key_from_url
-        print("storage : memory (no B2 credentials) — state resets on restart", flush=True)
+        print("storage : memory (no B2 credentials). State resets on restart", flush=True)
 
     # the taste rewriter is optional: no key, no call, plain expansion
     forge = Forge(blobs, st, sink=sink, chat=nvidia_chat(st.nvidia_api_key))

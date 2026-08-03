@@ -2,8 +2,8 @@
 
 The service holds no state: every read and write goes to B2 through the blobs
 seam, so this process can be killed, replicated or redeployed without losing a
-single approval. That is not an architectural flourish — it is what lets the
-step cache stay warm across deploys, which is the point of the project.
+single approval. That is not decoration. It is what keeps the step cache warm
+across deploys, which is the point of the project.
 """
 from typing import Any, Callable, Protocol
 
@@ -30,7 +30,7 @@ class _State:
     token: str = "dev"
     savings: Callable[[], dict] | None = None
     roster: Callable[[], list[dict]] | None = None
-    #: what the last brief was informed by — shown so the influence is never silent
+    #: what the last brief was informed by, shown so the influence is never silent
     taste: Callable[[], str] | None = None
     #: turns a Genblaze manifest URL back into a bucket key, so the provenance
     #: view can read the manifest the sink wrote
@@ -203,8 +203,8 @@ class _RevalidatingStatic(StaticFiles):
     A redeploy changes app.js while index.html keeps its name, so a browser
     holding the old script pairs new markup with stale code and the page
     misbehaves in ways nobody can reproduce. ``no-cache`` does not disable
-    caching — it requires a conditional request, so an unchanged file still
-    comes back 304 and costs nothing.
+    caching. It asks for a conditional request, so an unchanged file still comes
+    back 304 and costs nothing.
     """
 
     def file_response(self, *args, **kwargs):

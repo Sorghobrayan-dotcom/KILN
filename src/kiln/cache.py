@@ -35,9 +35,9 @@ def _is_unreadable(step: Step) -> bool:
     """True if any asset's bytes can no longer be fetched.
 
     A durable asset carries an http(s) URL written by the sink, and is fine. A
-    file:// URL means the upload never happened — usually because the transfer
-    failed after the step was already cached — so the bytes sit in a temp
-    directory that the next process will not find.
+    file:// URL means the upload never happened, usually because the transfer
+    failed after the step had already been cached. The bytes are then sitting in
+    a temp directory that the next process will not find.
 
     The test is whether the file is still *there*, not whether the URL is local:
     a deployment with no sink at all keeps its assets on disk quite legitimately,
@@ -80,7 +80,7 @@ class B2StepCache:
 
     @property
     def stale(self) -> int:
-        """Entries discarded for pointing at a local path — a failed upload."""
+        """Entries thrown away for pointing at a local path, i.e. a failed upload."""
         return self._stale
 
     def _key(self, step: Step, tenant_id: str | None) -> str:

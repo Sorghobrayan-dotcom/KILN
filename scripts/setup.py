@@ -42,7 +42,7 @@ def main() -> None:
     env = ROOT / ".env"
     if not env.exists():
         shutil.copy(ROOT / ".env.example", env)
-        print("\nCreated .env from .env.example — no credentials required to start.")
+        print("\nCreated .env from .env.example. No credentials required to start.")
 
     step("Running the tests")
     run(str(PY), "-m", "pytest", "-q")

@@ -4,15 +4,15 @@
 
 This file is the consumer side of Kiln, and it is deliberately standalone:
 standard library only, no Kiln import, no pip install. Copy it into a build
-repository and it works. That is the point — the library lives in Kiln, but
-the assets belong to whatever consumes them: a game build, a podcast episode,
-a site generator.
+repository and it works. That is the point. The library lives in Kiln, but the
+assets belong to whatever consumes them: a game build, a podcast episode, a
+site generator.
 
 Every asset is downloaded into memory, hashed, and compared against the sha256
 the manifest promised **before** anything touches disk. One tampered or
 truncated byte and the asset is refused, existing files stay intact, and the
-exit code is non-zero — this is a build tool, and a build tool must fail
-loudly, not approximately succeed.
+exit code is non-zero. This is a build tool, and a build tool has to fail
+loudly rather than approximately succeed.
 
 A `kiln-pull.json` record is written next to the assets: which manifest, which
 version, when, which files. Provenance travels with the assets instead of
@@ -92,7 +92,7 @@ def pull(manifest: dict, fetch, dest: Path, source: str = "") -> Report:
 
 
 def _http_fetch(url: str) -> bytes:
-    with urllib.request.urlopen(url) as response:  # noqa: S310 — build tool, url is the user's own
+    with urllib.request.urlopen(url) as response:  # noqa: S310, build tool, url is the user's own
         return response.read()
 
 
@@ -114,7 +114,7 @@ def main() -> int:
     print(f"{manifest.get('project')} v{manifest.get('version')}: "
           f"{len(report.pulled)} pulled, {len(report.refused)} refused")
     for sha in report.refused:
-        print(f"  REFUSED {sha} — hash mismatch or missing url", file=sys.stderr)
+        print(f"  REFUSED {sha} (hash mismatch or missing url)", file=sys.stderr)
     return 0 if report.ok else 1
 
 

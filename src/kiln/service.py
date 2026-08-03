@@ -44,8 +44,8 @@ class Forge:
         return self._providers[kind.key]
 
     def cache_for(self, project: str) -> B2StepCache:
-        """One cache namespace per project, so two games never collide — and so
-        the bucket stays readable to a human browsing it."""
+        """One cache namespace per project. Two games never collide, and the
+        bucket stays readable to anyone browsing it."""
         if project not in self._caches:
             self._caches[project] = B2StepCache(self._blobs, prefix=f"{project}/cache")
         return self._caches[project]

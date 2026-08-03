@@ -32,9 +32,9 @@ class BackendBlobs:
 
     Without this, a credential-free deployment splits its bytes in two: Genblaze
     puts assets in the backend, Kiln puts the index and the cache in its own
-    store, and ``/files/`` can only serve one of them — so the pictures in the
-    gallery are dead links. Pointing both at the same backend means a clone with
-    an empty .env gets a browsable library, not a list of broken images.
+    store, and ``/files/`` can only serve one of them, so the pictures in the
+    gallery come out as dead links. Pointing both at the same backend gives a
+    clone with an empty .env a browsable library instead.
     """
 
     def __init__(self, backend) -> None:
