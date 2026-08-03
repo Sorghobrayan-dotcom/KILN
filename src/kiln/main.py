@@ -1,14 +1,19 @@
-"""Production entrypoint.
+"""Production wiring.
 
-Wires whatever the environment provides and starts serving. Deliberately does
-not contact a provider or a bucket at import time: a container that phones home
-before it binds is a container whose cold start depends on somebody else's
-uptime, and judges click a link before they read a README.
+Reads the environment, picks B2 or memory, builds the forge and mounts the
+static files. Deliberately does not contact a provider or a bucket at import
+time: a deployment that phones home before it binds has a cold start that
+depends on somebody else's uptime, and judges click a link before they read a
+README.
+
+**uvicorn is imported inside __main__, never at module level.** A serverless
+platform imports this module to reach `app` but never starts a server, so
+uvicorn is not installed there — importing it at the top makes the whole
+application fail to load, for a reason that has nothing to do with the
+application. That is exactly what took down the first Vercel deploy.
 """
 import os
 from pathlib import Path
-
-import uvicorn
 
 from kiln.api import STATE, app, mount_static
 from kiln.blobs import B2Blobs, BackendBlobs
@@ -64,6 +69,8 @@ def build() -> None:
 build()
 
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run(
         app,
         host="0.0.0.0",
