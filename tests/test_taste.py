@@ -43,15 +43,16 @@ def test_guidance_is_empty_without_judgements():
 
 
 def test_guidance_names_both_sides():
-    text = guidance_from(Taste(kept=["a knight in fog"], dropped=["a knight, neon"]))
+    text = guidance_from(Taste(
+        kept=["a knight in fog", "a squire in fog"], dropped=["a knight, neon"]))
     assert "a knight in fog" in text
     assert "a knight, neon" in text
     assert "kept" in text.lower() and "rejected" in text.lower()
 
 
 def test_guidance_survives_one_sided_history():
-    only_kept = guidance_from(Taste(kept=["a knight"], dropped=[]))
-    only_dropped = guidance_from(Taste(kept=[], dropped=["neon"]))
+    only_kept = guidance_from(Taste(kept=["a knight", "a squire", "a page"], dropped=[]))
+    only_dropped = guidance_from(Taste(kept=[], dropped=["neon", "chrome", "vapor"]))
     assert "a knight" in only_kept and "rejected" not in only_kept.lower()
     assert "neon" in only_dropped and "kept" not in only_dropped.lower()
 
