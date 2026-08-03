@@ -27,7 +27,7 @@ def test_without_taste_it_does_not_call_the_model_at_all():
     calls = []
     out = rewriter(chat=scripted("x", calls=calls)).prompts("p", "art", BRIEF, 2, Taste([], []))
     assert calls == []
-    assert out == [f"{BRIEF} — variant 1 of 2", f"{BRIEF} — variant 2 of 2"]
+    assert out == [f"{BRIEF} (variant 1 of 2)", f"{BRIEF} (variant 2 of 2)"]
 
 
 def test_with_taste_it_returns_the_models_lines():
@@ -68,7 +68,7 @@ def test_a_model_failure_falls_back_to_the_plain_expansion():
         raise RuntimeError("provider down")
 
     out = rewriter(chat=boom).prompts("p", "art", BRIEF, 2, TASTE)
-    assert out == [f"{BRIEF} — variant 1 of 2", f"{BRIEF} — variant 2 of 2"]
+    assert out == [f"{BRIEF} (variant 1 of 2)", f"{BRIEF} (variant 2 of 2)"]
 
 
 def test_a_short_reply_is_padded_and_a_long_one_trimmed():

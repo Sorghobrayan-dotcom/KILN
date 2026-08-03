@@ -11,7 +11,7 @@ It learns per *kind*: a voice line you liked says nothing about what makes a goo
 engraving, and mixing them would produce guidance that reads like noise.
 
 It weighs recent judgements over old ones. A project's look drifts, and taste
-that cannot change is not taste — it is a rule.
+that cannot change is not taste at all. It is a rule.
 """
 from dataclasses import dataclass, field
 
@@ -22,7 +22,7 @@ DEFAULT_LIMIT = 6
 #: States that mean a human said yes. `published` is `approved` that shipped.
 _KEPT = ("approved", "published")
 
-#: Below this, there is no pattern — only coincidence. Two prompts sharing a
+#: Below this there is no pattern, only coincidence. Two prompts sharing a
 #: word say nothing, and a model asked to generalise from them will seize that
 #: word and call it a style. Better to say "still learning" than to invent.
 MIN_TO_LEARN = 3
@@ -51,7 +51,7 @@ class Taste:
 
     @property
     def summary(self) -> str:
-        """One line for the interface, so the influence is never invisible —
+        """One line for the interface, so the influence is never invisible,
         including when there is not yet any influence to report."""
         if self.judged == 0:
             return ""

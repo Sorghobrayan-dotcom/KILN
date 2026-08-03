@@ -1,7 +1,7 @@
 """The one place Kiln talks to Genblaze.
 
-Everything above this file is Kiln's own logic — curation, approval,
-versioning — and is tested without a network. Everything below is Genblaze's:
+Everything above this file is Kiln's own logic (curation, approval, versioning)
+and is tested without a network. Everything below belongs to Genblaze:
 the Pipeline, the canonical manifest, the B2 sink, and our durable
 :class:`~kiln.cache.B2StepCache` plugged in through ``Pipeline.cache()``.
 

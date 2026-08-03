@@ -1,4 +1,5 @@
-"""A Genblaze provider for Pollinations — free image generation, no credential.
+"""A Genblaze provider for Pollinations, which generates images free and
+without a credential.
 
 Written because every hosted image tier we tried on 2026-08-02 was shut:
 NVIDIA's gateway answered 504 after 303 seconds on a valid request, and Google
@@ -10,9 +11,9 @@ It is also the point at which Kiln stops merely *calling* Genblaze and starts
 does not ship is fifty lines rather than a fork.
 
 The seed is derived from the prompt rather than left to the service. That is
-what makes the provider honest inside a provenance system — the same prompt
-returns the same picture, so a cache hit and a fresh run are indistinguishable
-in the output as well as in the manifest.
+what makes the provider honest inside a provenance system. The same prompt
+returns the same picture, so a cache hit and a fresh run cannot be told apart
+in the output any more than in the manifest.
 """
 import hashlib
 import os

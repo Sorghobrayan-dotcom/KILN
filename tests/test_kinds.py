@@ -30,8 +30,8 @@ def test_gmi_key_unlocks_video_and_image():
 
 
 def test_art_is_a_real_generator_not_a_placeholder():
-    """'art' goes to Pollinations, which is free but is still an AI service —
-    unlike 'sketch', which draws locally and must never be sold as generation."""
+    """'art' goes to Pollinations, which is free but is still an AI service.
+    'sketch' draws locally, and must never be sold as generation."""
     art = next(k for k in KINDS if k.key == "art")
     assert art.needs == ""
     assert "pollinations" in art.hint

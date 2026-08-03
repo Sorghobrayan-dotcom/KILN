@@ -35,7 +35,7 @@ def test_tenant_partitions_the_cache():
 def test_survives_a_new_instance_same_bucket():
     blobs = MemoryBlobs()
     B2StepCache(blobs, prefix="demo/cache").put(a_step(), a_step())
-    # a fresh process against the same bucket — this is the whole point
+    # a fresh process against the same bucket. this is the whole point
     assert B2StepCache(blobs, prefix="demo/cache").get(a_step()) is not None
 
 

@@ -2,8 +2,8 @@
 
 Uses whatever the environment provides: real B2 and real providers when the
 keys are there, memory and the offline sketch provider when they are not. The
-app is therefore never dead on arrival — a fresh clone with an empty .env still
-demonstrates the whole journey.
+app is therefore never dead on arrival. A fresh clone with an empty .env still
+shows the whole journey.
 """
 import _env
 
@@ -33,7 +33,7 @@ if has_b2:
     # prefix to get back the key the blobs layer reads
     _root = f"{st.b2_endpoint.rstrip('/')}/{st.b2_bucket}/"
     manifest_key_from_url = lambda u: u[len(_root):] if u and u.startswith(_root) else None
-    print(f"storage : Backblaze B2 — {st.b2_bucket}")
+    print(f"storage : Backblaze B2, bucket {st.b2_bucket}")
 else:
     # No credentials: still run the real sink, so this path exercises the same
     # transfer and URL-rewriting code as production. Assets and state share one
@@ -43,7 +43,7 @@ else:
     sink = ObjectStorageSink(backend, prefix="kiln",
                              key_strategy=KeyStrategy.CONTENT_ADDRESSABLE)
     manifest_key_from_url = backend.key_from_url
-    print("storage : memory (no B2 keys) — assets served from /files/")
+    print("storage : memory (no B2 keys). Assets served from /files/")
 
 # the taste rewriter is optional: no key, no call, plain expansion
 forge = Forge(blobs, st, sink=sink, chat=nvidia_chat(st.nvidia_api_key))

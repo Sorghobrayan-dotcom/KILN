@@ -1,8 +1,8 @@
 """Rewrite a brief in the light of what this project has kept.
 
 The loop this closes: you judge assets, and your judgements come back as better
-briefs. Without it, Keep and Drop only decide what ships — the library stores
-opinions and never uses them.
+briefs. Without it, Keep and Drop only decide what ships, and the library
+collects opinions it never uses.
 
 Three properties it has to hold, in order of how badly their absence would hurt:
 
@@ -10,8 +10,8 @@ Three properties it has to hold, in order of how badly their absence would hurt:
 that varies run to run would miss its own cache forever and the project's whole
 premise would quietly stop working. The rewrite is therefore cached in the
 bucket under the brief *and* a fingerprint of the taste that shaped it. Same
-brief, same taste, same prompts — down to the byte. Change your mind and you get
-a fresh rewrite, which is what changing your mind should mean.
+brief, same taste, same prompts, down to the byte. Change your mind and you get
+a fresh rewrite, which is what changing your mind ought to mean.
 
 **It must not be able to break generation.** A model that is slow, down or
 talkative falls back to the plain expansion. The feature can fail; the product
@@ -62,7 +62,7 @@ def plain_expand(description: str, count: int) -> list[str]:
     """The expansion used when there is no taste, or when the model fails."""
     if count == 1:
         return [description]
-    return [f"{description} — variant {i + 1} of {count}" for i in range(count)]
+    return [f"{description} (variant {i + 1} of {count})" for i in range(count)]
 
 
 def nvidia_chat(api_key: str, model: str = DEFAULT_MODEL):

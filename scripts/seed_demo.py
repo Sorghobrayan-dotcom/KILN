@@ -3,7 +3,7 @@
 - providence      the game: NPC voice lines + engraved concept art
 - midnight-radio  the podcast: intro voice + jingle + cover art
 
-Two projects, two audiences, one instance — the podcast is the proof that
+Two projects, two audiences, one instance. The podcast is the proof that
 nothing in Kiln knows what a game is. Idempotent: the step cache makes a
 second run cost nothing, and publish() only seals what is approved and
 unshipped.

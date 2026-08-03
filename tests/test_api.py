@@ -15,7 +15,7 @@ ROSTER = [
 
 
 def fake_generate(project, description, count, kind):
-    """Two fresh assets, then everything is a cache hit — like a warm bucket."""
+    """Two fresh assets, then everything is a cache hit, like a warm bucket."""
     if kind == "video":
         raise KeyError("kind 'video' needs GMI_API_KEY")
     out = []
