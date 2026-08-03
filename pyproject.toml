@@ -1,3 +1,21 @@
+[project]
+name = "kiln"
+version = "1.0.0"
+description = "A curated, versioned asset library on Genblaze and Backblaze B2"
+requires-python = ">=3.11"
+
+# What the server needs to run, and nothing more. uvicorn and pytest stay in
+# requirements.txt: the first is only needed when Kiln starts its own server,
+# and a deployment that runs the ASGI app directly never does.
+dependencies = [
+    "genblaze",              # pulls in genblaze-core and genblaze-s3
+    "genblaze-elevenlabs",   # voice and sound effects
+    "genblaze-nvidia[chat]", # the taste rewriter
+    "fastapi",
+    "pillow",                # thumbnails and the offline provider
+    "httpx",                 # pollinations
+]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
