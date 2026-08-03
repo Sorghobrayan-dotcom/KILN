@@ -5,7 +5,10 @@ from kiln.rewriter import TasteRewriter
 from kiln.taste import Taste
 
 BRIEF = "a watchtower on a ridge"
-TASTE = Taste(kept=["a gate in fog, engraving"], dropped=["a gate, neon"])
+TASTE = Taste(
+    kept=["a gate in fog, engraving", "a lantern on cobbles, engraving"],
+    dropped=["a gate, neon"],
+)
 
 
 def rewriter(blobs=None, chat=None, **kw):
