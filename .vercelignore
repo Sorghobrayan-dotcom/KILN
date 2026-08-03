@@ -1,0 +1,20 @@
+# vercel.json uses includeFiles "**" so that src/ and static/ reach the
+# function. That glob is indiscriminate, so everything the function does not
+# need is excluded here — a bundle over 250 MB fails with
+# FUNCTION_INVOCATION_FAILED and no useful message.
+.venv/
+.cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+.git/
+.env
+
+tests/
+scripts/
+docs/
+examples/
+Dockerfile
+DEPLOY.md
+*.png
