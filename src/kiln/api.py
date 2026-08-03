@@ -214,5 +214,18 @@ class _RevalidatingStatic(StaticFiles):
 
 
 def mount_static(directory: str = "static") -> None:
-    """Mounted last, so /api and /files always win over the catch-all."""
+    """Mounted last, so /api and /files always win over the catch-all.
+
+    A missing directory is survivable and must not be fatal. StaticFiles raises
+    on construction when the path is absent, which on a serverless platform
+    means the whole module fails to import and every route returns a bare 500,
+    including the one that would have told you why. Better to lose the pages
+    and keep the API answering.
+    """
+    import os
+
+    if not os.path.isdir(directory):
+        print(f"static : {directory} not found, serving the API only", flush=True)
+        return
+
     app.mount("/", _RevalidatingStatic(directory=directory, html=True), name="static")
