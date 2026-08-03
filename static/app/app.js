@@ -80,11 +80,16 @@ $("brief-form").addEventListener("submit", async (event) => {
 // Nothing here throws a decision away, so we hide it and keep a count.
 let showDropped = false;
 
+let assets = [];
+
 async function refresh() {
   if (!project()) return;
   const res = await fetch(`/api/projects/${encodeURIComponent(project())}/staging`);
-  const { assets } = await res.json();
+  assets = (await res.json()).assets;
+  render();
+}
 
+function render() {
   const dropped = assets.filter((a) => a.state === "rejected");
   const visible = showDropped ? assets : assets.filter((a) => a.state !== "rejected");
 
@@ -166,15 +171,28 @@ function button(label, onClick) {
 }
 
 async function decide(asset, action) {
+  // The decision is already made: it was the click. Waiting three round trips
+  // to Frankfurt before showing it makes the app feel broken, so we show it at
+  // once and put it back if the write refuses.
+  const entry = assets.find((a) => a.asset === asset);
+  const previous = entry?.state;
+  if (entry) {
+    entry.state = action === "approve" ? "approved" : "rejected";
+    render();
+  }
+
   const res = await fetch(
     `/api/projects/${encodeURIComponent(project())}/assets/${encodeURIComponent(asset)}/${action}`,
     { method: "POST", headers: headers() },
   );
+
   if (!res.ok) {
+    if (entry) {
+      entry.state = previous;
+      render();
+    }
     say(res.status === 401 ? "Wrong token. Changes are protected." : `Error ${res.status}`, "err");
-    return;
   }
-  await refresh();
 }
 
 function rows(target, pairs) {
@@ -285,8 +303,9 @@ $("publish").addEventListener("click", async () => {
 });
 
 $("dropped").addEventListener("click", () => {
+  // purely a filter over what we already hold, so no round trip
   showDropped = !showDropped;
-  refresh();
+  render();
 });
 
 loadKinds().then(refresh);
