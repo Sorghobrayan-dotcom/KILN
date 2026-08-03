@@ -56,7 +56,7 @@ class Taste:
         if self.judged == 0:
             return ""
         if not self.informed:
-            return f"learning — {self.judged} of {MIN_TO_LEARN} judgements"
+            return f"still learning, {self.judged} of {MIN_TO_LEARN} judgements so far"
         return f"informed by {len(self.kept)} kept, {len(self.dropped)} dropped"
 
     @classmethod

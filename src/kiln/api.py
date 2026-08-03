@@ -94,8 +94,8 @@ def create_brief(brief: BriefIn, x_kiln_token: str | None = Header(default=None)
 
     served = sum(1 for r in results if r.get("cached"))
     failed = sum(1 for r in results if r.get("failed"))
-    summary = (f"{len(results)} asset(s) — {served} served from B2, "
-               f"{len(results) - served - failed} generated")
+    summary = (f"{len(results)} asset(s). {served} came from B2, "
+               f"{len(results) - served - failed} were generated")
     if failed:
         summary += f", {failed} failed"
 

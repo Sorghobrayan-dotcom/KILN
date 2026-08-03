@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kiln — assets with a memory</title>
-<meta name="description" content="A curated, versioned asset library built on Genblaze and Backblaze B2. Generate, judge, seal — and never pay for the same generation twice.">
+<title>Kiln, assets with a memory</title>
+<meta name="description" content="A curated, versioned asset library built on Genblaze and Backblaze B2. Make something, judge it, seal it, and stop paying twice for what you already have.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%233b5bdb'/%3E%3Cline x1='4' y1='3' x2='20' y2='3' stroke='%23fff' stroke-width='2.2' stroke-linecap='square'/%3E%3Cline x1='12' y1='3' x2='12' y2='15' stroke='%23fff' stroke-width='1.54'/%3E%3Cpath d='M 12 15 L 16.2 18.4 L 12 21.5 L 7.8 18.4 Z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,7 +70,7 @@
     line-height: 1.02;
     letter-spacing: -0.038em;
     font-weight: 600;
-    max-width: 15ch;          /* forces the break — the line is designed, not accidental */
+    max-width: 15ch;          /* forces the break, so the line is designed rather than accidental */
     margin-bottom: 1.4rem;
   }
   .claim { font-size: 1.075rem; color: var(--ink2); max-width: 46ch; margin-bottom: 2.4rem; }
@@ -228,9 +228,9 @@
   <div class="wrap">
     <h1>Assets with a memory.</h1>
     <p class="claim">
-      Genblaze gives you provenance <b>per run</b>. Kiln gives you a curated
-      library <b>across runs</b> — generate, judge, seal, and never pay for the
-      same generation twice.
+      Genblaze records provenance one run at a time. Kiln keeps the whole
+      library: what you made, what you kept, what shipped. And it stops you
+      paying twice for a picture you already have.
     </p>
     <div class="actions">
       <a class="btn primary" href="/app/">Open the live app <span class="k">kiln-demo-2026</span></a>
@@ -247,19 +247,20 @@
   <div class="figures">
     <div class="figure-lead">
       <div class="n">50%</div>
-      <div class="l">of generations served from the bucket instead of a provider</div>
+      <div class="l">of recent runs came out of the bucket, not a provider</div>
     </div>
     <div class="figure-rest">
-      <div><div class="n">76</div><div class="l">tests, none needing a network</div></div>
-      <div><div class="n">3</div><div class="l">Genblaze seams extended</div></div>
-      <div><div class="n">0</div><div class="l">API keys needed to run it</div></div>
+      <div><div class="n">76</div><div class="l">tests, none of them touch a network</div></div>
+      <div><div class="n">3</div><div class="l">places where we extend Genblaze</div></div>
+      <div><div class="n">0</div><div class="l">API keys needed to try it</div></div>
     </div>
   </div>
 
   <section>
     <p class="eyebrow">The problem</p>
-    <h2>Generating media is the easy part now.</h2>
-    <p>Every provider does it. What breaks a small team is everything after — and none of it is about model quality.</p>
+    <h2>Making the picture is no longer the hard part</h2>
+    <p>Any provider will do that for you. Small teams come unstuck afterwards,
+       and none of it has to do with how good the model is.</p>
     <ul class="asks">
       <li>Which prompt made this file? Which model? Can I make it again?</li>
       <li>I regenerated that yesterday. I just paid for it twice.</li>
@@ -270,51 +271,56 @@
 
   <section id="proof">
     <p class="eyebrow">The proof</p>
-    <h2>A sealed version, pulled into a build.</h2>
-    <p>Kiln seals a version. A build pulls it, verifying every hash <b>before a byte touches disk</b>. This is that chain, run against the live bucket:</p>
-<pre><span class="c"># seal what a human approved</span>
+    <h2>Sealing a version, then pulling it into a build</h2>
+    <p>Kiln seals a version. A build then pulls it and checks every hash
+       <b>before writing anything to disk</b>. Here is that chain against the
+       live bucket.</p>
+<pre><span class="c"># seal whatever a human approved</span>
 providence v1 <span class="g">sealed with 6 assets</span>
 midnight-radio v1 <span class="g">sealed with 3 assets</span>
 
-<span class="c"># a build pulls it — one stdlib file, no Kiln install</span>
+<span class="c"># a build pulls it. one stdlib file, no Kiln install</span>
 <span class="b">$</span> python examples/pull.py <span class="y">…/providence/v1/manifest.json</span> --into ./art-drop
 providence v1: <span class="g">6 pulled, 0 refused</span>
 
-<span class="c"># now alter one sha256 in the manifest</span>
+<span class="c"># now change one sha256 in the manifest</span>
 <span class="b">$</span> python examples/pull.py <span class="y">…/tampered.json</span> --into ./art-drop
-  <span class="y">REFUSED</span> 000000…000000 — hash mismatch or missing url
+  <span class="y">REFUSED</span> 000000…000000 (hash mismatch or missing url)
 providence v1: 5 pulled, <span class="y">1 refused</span>
 <span class="b">$</span> echo $?
-<span class="y">1</span>   <span class="c">— the build stops</span></pre>
-    <p class="note">Two projects, one instance: a narrative game and a podcast. Nothing in the code knows what a game is.</p>
+<span class="y">1</span>   <span class="c"># the build stops here</span></pre>
+    <p class="note">Two projects share one instance here, a narrative game and
+       a podcast. Nothing in the code knows what a game is.</p>
   </section>
 
   <section id="storage">
     <p class="eyebrow">Backblaze B2</p>
-    <h2>B2 is not the cupboard. It is the database.</h2>
-    <p>The service holds no state, so it can be redeployed, replicated or killed without losing a decision anyone made — and the cache stays warm across deploys.</p>
+    <h2>B2 is the database, not a cupboard</h2>
+    <p>The service keeps nothing of its own. You can redeploy it, run four
+       copies of it, or kill it outright, and no decision anyone made is
+       lost. The cache is still warm afterwards.</p>
     <table>
       <thead><tr><th>Surface</th><th>Key</th><th>Why it matters</th></tr></thead>
       <tbody>
         <tr>
           <td>Assets</td>
           <td><code>kiln/assets/ab/cd/&lt;sha256&gt;</code></td>
-          <td>Content-addressable — identical bytes occupy one key, forever.</td>
+          <td>Content-addressable, so the same bytes only ever take one key.</td>
         </tr>
         <tr>
           <td>Manifests</td>
           <td><code>kiln/manifests/&lt;run&gt;.json</code></td>
-          <td>Genblaze’s canonical provenance, hash-verified, one per run.</td>
+          <td>One per run. Genblaze writes it and hashes it.</td>
         </tr>
         <tr>
           <td>Step cache</td>
           <td><code>&lt;project&gt;/cache/&lt;key&gt;.json</code></td>
-          <td>The piece the whole project rests on.</td>
+          <td>The part everything else here depends on.</td>
         </tr>
         <tr>
           <td>Sealed versions</td>
           <td><code>&lt;project&gt;/v&lt;N&gt;/manifest.json</code></td>
-          <td>Immutable. A build pinned to v2 keeps building the same thing.</td>
+          <td>Never rewritten, so a build pinned to v2 keeps building the same thing.</td>
         </tr>
       </tbody>
     </table>
@@ -322,25 +328,26 @@ providence v1: 5 pulled, <span class="y">1 refused</span>
 
   <section id="seams">
     <p class="eyebrow">Genblaze</p>
-    <h2>Kiln does not wrap Genblaze. It extends it.</h2>
-    <p>Three published seams, each implemented rather than worked around.</p>
+    <h2>We extend Genblaze rather than wrap it</h2>
+    <p>Three of its published extension points. We implemented them instead
+       of working around them.</p>
     <div class="seams">
       <div class="seam">
         <div>
           <h3>A durable <code>StepCache</code></h3>
-          <p>The shipped cache is disk-backed: it dies with the container and is never shared between workers, so the same prompt is paid for again after every redeploy. Ours implements the same contract against B2, reusing Genblaze’s own <code>step_cache_key</code>.</p>
+          <p>The cache that ships with Genblaze writes to disk. It dies with the container, and two workers never see each other’s entries, so you buy the same prompt again after every redeploy. Ours holds the same contract but writes to B2. It borrows Genblaze’s own <code>step_cache_key</code>, so the two always agree on what counts as the same step.</p>
         </div>
       </div>
       <div class="seam">
         <div>
           <h3>A provider the SDK doesn’t ship</h3>
-          <p><code>SyncProvider</code> is public, so a Pollinations adapter is fifty lines rather than a fork. Its seed comes from the prompt hash — the same brief redraws the same picture, so a cache hit and a fresh run agree in the output as well as in the manifest.</p>
+          <p><code>SyncProvider</code> is public, which made the Pollinations adapter fifty lines instead of a fork. We take its seed from the prompt hash. The same brief then redraws the same picture, so a cache hit matches a fresh run in the output and not only in the manifest.</p>
         </div>
       </div>
       <div class="seam">
         <div>
           <h3>A <code>StorageBackend</code></h3>
-          <p>An in-memory implementation, so the credential-free path runs the <em>same</em> sink, transfer and URL-rewriting code as production instead of skipping it.</p>
+          <p>An in-memory one. It means the path with no credentials still runs the <em>same</em> sink and transfer code as production, rather than quietly skipping it.</p>
         </div>
       </div>
     </div>
@@ -348,19 +355,19 @@ providence v1: 5 pulled, <span class="y">1 refused</span>
 
   <section>
     <p class="eyebrow">Field notes</p>
-    <h2>Three things we found by using it.</h2>
+    <h2>Three things we ran into</h2>
     <div class="finds">
       <div class="find">
         <h3>A cache hit is invisible</h3>
-        <p>Genblaze returns the cached step verbatim — no flag, no tracer event — so an app can’t tell a hit from a fresh run, and can’t tell its user what was saved.</p>
+        <p>Genblaze hands the cached step back as it was, with no flag and no tracer event. An app therefore cannot tell a hit from a fresh run, and cannot tell its user what it just saved them.</p>
       </div>
       <div class="find">
         <h3>Cached before uploaded</h3>
-        <p>A failed transfer leaves an entry pointing at a temp file the next process can’t read. That prompt then breaks permanently. We hit it three runs in a row.</p>
+        <p>A failed transfer leaves an entry pointing at a temp file the next process cannot read. From then on that prompt fails every time. It took three identical failures before we saw it.</p>
       </div>
       <div class="find">
         <h3>Writes are path-guarded</h3>
-        <p>Providers must write under temp or a declared <code>output_dir</code>. Correct, and invisible until a transfer fails citing allowed directories.</p>
+        <p>Providers have to write under temp or a declared <code>output_dir</code>. That is the right call, and you will not hear about it until a transfer fails and mentions allowed directories.</p>
       </div>
     </div>
   </section>
@@ -372,9 +379,11 @@ providence v1: 5 pulled, <span class="y">1 refused</span>
         <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="1.33"/>
         <path d="M 12 15 L 16.2 18.4 L 12 21.5 L 7.8 18.4 Z" fill="currentColor"/>
       </svg>
-      <span>A plumb line: gravity used as a measure of trueness.</span>
+      <span>A plumb line. Gravity, used to check whether a thing is true.</span>
     </div>
-    <p>Built for a game studio because that is where I hit the problem. The loop — generate, judge, seal, never pay twice — belongs to any team producing media at volume.</p>
+    <p>I built this for a game studio, because that is where the problem
+       found me. The loop it runs suits any team turning out media in
+       quantity: make something, judge it, seal it, stop paying twice.</p>
     <p style="margin-top:.8rem">MIT licensed. Built with <a href="https://github.com/backblaze-labs/genblaze">Genblaze</a> and <a href="https://www.backblaze.com/cloud-storage">Backblaze B2</a>.</p>
   </footer>
 
