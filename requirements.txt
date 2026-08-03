@@ -1,10 +1,14 @@
+# What the deployed function needs, and nothing more. Vercel installs this on
+# every build, and each package is also import time on every cold start.
+#
+# uvicorn and pytest are deliberately absent: the first is only needed when Kiln
+# starts its own server, which a platform running the ASGI app directly never
+# does, and the second belongs to development. genblaze-google is absent because
+# no kind uses it — every Gemini image model returned 429 with limit 0.
 genblaze
 genblaze-s3
+genblaze-elevenlabs
 genblaze-nvidia
 fastapi
-uvicorn[standard]
 pillow
 httpx
-pytest
-genblaze-google
-genblaze-elevenlabs
