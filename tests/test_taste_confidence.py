@@ -27,7 +27,7 @@ def test_kept_and_dropped_count_together_towards_the_threshold():
 
 def test_progress_is_reported_while_still_learning():
     t = Taste(kept=["a"], dropped=[])
-    assert t.summary == f"learning — 1 of {MIN_TO_LEARN} judgements"
+    assert t.summary == f"still learning, 1 of {MIN_TO_LEARN} judgements so far"
 
 
 def test_summary_reports_the_split_once_it_has_enough():

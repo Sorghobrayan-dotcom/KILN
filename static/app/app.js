@@ -13,7 +13,7 @@ function say(text, kind = "") {
 
 function showTaste(text) {
   const el = $("taste");
-  el.textContent = text ? `Prompts ${text} on this project.` : "";
+  el.textContent = text ? `Prompts on this project are ${text}.` : "";
   el.hidden = !text;
 }
 
@@ -24,8 +24,8 @@ function showSavings(savings) {
   }
   const { generations_avoided: avoided, generations_paid_for: paid, hit_rate: rate } = savings;
   $("savings").textContent =
-    `This library has avoided ${avoided} generation(s) — ` +
-    `${paid} paid for, ${Math.round(rate * 100)}% served from the bucket.`;
+    `This library has skipped ${avoided} generation(s). ` +
+    `${paid} were paid for, ${Math.round(rate * 100)}% came from the bucket.`;
 }
 
 async function loadKinds() {
@@ -35,7 +35,7 @@ async function loadKinds() {
   for (const k of kinds) {
     const option = document.createElement("option");
     option.value = k.key;
-    option.textContent = k.enabled ? k.label : `${k.label} — unavailable`;
+    option.textContent = k.enabled ? k.label : `${k.label} (unavailable)`;
     option.disabled = !k.enabled;
     option.title = k.hint;
     select.append(option);
@@ -76,8 +76,8 @@ $("brief-form").addEventListener("submit", async (event) => {
   }
 });
 
-// Dropped assets leave the working view but never the ledger: the whole claim
-// of this project is that no decision is lost. Hidden, counted, one click away.
+// Dropping an asset takes it out of the grid but leaves it in the ledger.
+// Nothing here throws a decision away, so we hide it and keep a count.
 let showDropped = false;
 
 async function refresh() {
@@ -95,7 +95,7 @@ async function refresh() {
     toggle.hidden = false;
     toggle.textContent = showDropped
       ? `Hide ${dropped.length} dropped`
-      : `${dropped.length} dropped — show`;
+      : `Show ${dropped.length} dropped`;
   }
 
   $("empty").hidden = visible.length > 0;
@@ -129,8 +129,7 @@ async function refresh() {
 }
 
 function preview(asset) {
-  // an asset that failed has no bytes to show; say so rather than render a
-  // broken box the user has to guess at
+  // a failed asset has no bytes, so say that rather than draw a broken box
   if (!asset.url) {
     const dead = document.createElement("div");
     dead.className = "dead";
@@ -172,7 +171,7 @@ async function decide(asset, action) {
     { method: "POST", headers: headers() },
   );
   if (!res.ok) {
-    say(res.status === 401 ? "Wrong token — mutations are protected." : `Error ${res.status}`, "err");
+    say(res.status === 401 ? "Wrong token. Changes are protected." : `Error ${res.status}`, "err");
     return;
   }
   await refresh();
@@ -209,7 +208,7 @@ async function showProvenance(asset) {
     version: asset.version ?? "not sealed yet",
     verdict: asset.reasons,
   });
-  body.append(section("Kiln — what a human decided"), kiln);
+  body.append(section("What a human decided"), kiln);
 
   const loading = document.createElement("p");
   loading.className = "muted";
@@ -246,7 +245,7 @@ async function showProvenance(asset) {
     "manifest uri": manifest?.manifest_uri ?? asset.manifest_uri,
     signature: manifest?.signature ? "present" : undefined,
   });
-  body.append(section("Genblaze — how it was made"), gb);
+  body.append(section("How Genblaze made it"), gb);
 
   if (payload.manifest_note) {
     const note = document.createElement("p");
@@ -279,8 +278,8 @@ $("publish").addEventListener("click", async () => {
     return;
   }
   say(
-    `Sealed v${body.version}: ${body.assets.length} asset(s) → ` +
-    `${project()}/v${body.version}/manifest.json in B2. That version can never change.`,
+    `Sealed v${body.version} with ${body.assets.length} asset(s), written to ` +
+    `${project()}/v${body.version}/manifest.json in B2. Nothing can change it now.`,
   );
   await refresh();
 });

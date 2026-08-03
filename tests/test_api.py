@@ -71,7 +71,7 @@ def test_full_journey_brief_to_sealed_manifest(client):
     assert r.status_code == 200
     body = r.json()
     assert body["served_from_cache"] == 1
-    assert "1 served from B2" in body["summary"]
+    assert "1 came from B2" in body["summary"]
     assert body["savings"] == SAVINGS
 
     staged = client.get("/api/projects/providence/staging").json()["assets"]
