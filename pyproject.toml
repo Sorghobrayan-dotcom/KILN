@@ -16,6 +16,11 @@ dependencies = [
     "httpx",                 # pollinations
 ]
 
+# Vercel reads app.py statically to find the ASGI application. Naming it
+# here removes the guesswork, and the guesswork is what failed twice.
+[tool.vercel]
+entrypoint = "app:app"
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
