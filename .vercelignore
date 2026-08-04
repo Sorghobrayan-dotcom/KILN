@@ -1,7 +1,7 @@
-# vercel.json uses includeFiles "**" so that src/ and static/ reach the
-# function. That glob is indiscriminate, so everything the function does not
-# need is excluded here — a bundle over 250 MB fails with
-# FUNCTION_INVOCATION_FAILED and no useful message.
+# Vercel bundles every file it can reach and does no tree shaking for Python,
+# so everything the function does not need is excluded here. This is about cold
+# start weight, not about clearing a limit: the Python bundle ceiling is 500 MB
+# uncompressed and the runtime dependencies come to roughly 80 MB.
 .venv/
 .cache/
 .pytest_cache/
