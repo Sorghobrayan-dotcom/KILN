@@ -147,10 +147,7 @@ def provenance(project: str, asset: str):
     """
     import json
 
-    entry = next(
-        (a for a in _library(project).staging() if a["asset"] == asset),
-        None,
-    )
+    entry = _library(project).entry(asset)
     if entry is None:
         raise HTTPException(status_code=404, detail=f"no asset {asset} in {project}")
 

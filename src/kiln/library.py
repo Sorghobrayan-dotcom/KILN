@@ -72,6 +72,16 @@ class Library:
     def staging(self) -> list[dict]:
         return [e for e in self._ordered(self._load()) if e["state"] != "published"]
 
+    def entry(self, asset: str) -> dict | None:
+        """One asset, whatever state it is in.
+
+        Deliberately not built on staging(), which hides published assets. An
+        asset that shipped is precisely the one whose provenance someone wants
+        to read, and looking it up in the working list returned 404 for every
+        sealed asset.
+        """
+        return self._load()["assets"].get(asset)
+
     def manifest(self, version: int) -> dict | None:
         raw = self._blobs.get(f"{self._project}/v{version}/manifest.json")
         return json.loads(raw.decode("utf-8")) if raw else None

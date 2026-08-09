@@ -59,3 +59,22 @@ def test_recording_the_same_asset_twice_updates_not_duplicates():
     L.record("aa", prompt="k", model="m", provider="p", url="u2", sha256="aa", score=9)
     items = L.staging()
     assert len(items) == 1 and items[0]["score"] == 9 and items[0]["url"] == "u2"
+
+
+def test_a_sealed_asset_is_still_findable():
+    """staging() hides published assets, so looking provenance up there gave a
+    404 for every asset that had shipped. That is the one you most want to
+    read."""
+    L = lib()
+    L.record("aa", prompt="k", model="m", provider="p", url="u", sha256="aa")
+    L.approve("aa")
+    L.publish()
+
+    assert L.staging() == []
+    found = L.entry("aa")
+    assert found is not None
+    assert found["state"] == "published" and found["prompt"] == "k"
+
+
+def test_entry_returns_none_for_an_asset_that_never_existed():
+    assert lib().entry("nope") is None
